@@ -7,9 +7,7 @@ WINDOW = 3
 
 
 @click.command()
-@click.argument(
-    "input", type=click.File("r", encoding="utf-8"), required=True, default="-"
-)
+@click.argument("input", type=click.File("r", encoding="utf-8"), required=True)
 def main(input: TextIO) -> None:
     parsed_numbers: Iterator[int] = iter(map(int, filter(None, input)))
     previous_observations: Deque[int] = deque(maxlen=WINDOW)
