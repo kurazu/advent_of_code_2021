@@ -1,18 +1,17 @@
 from typing import TextIO
 
-import click
 import pandas as pd
 
+from ..cli import run_with_file_argument
 
-@click.command()
-@click.argument("input", type=click.File("r", encoding="utf-8"), required=True)
-def main(input: TextIO) -> None:
+
+def main(input: TextIO) -> str:
     df = pd.read_csv(input, names=["reading"])
     df["prev_reading"] = df.reading.shift(1)
     df.dropna(subset=["prev_reading"], inplace=True)
     count = (df["reading"] > df["prev_reading"]).sum()
-    click.echo(f"{count}")
+    return f"{count}"
 
 
 if __name__ == "__main__":
-    main()
+    run_with_file_argument(main)
