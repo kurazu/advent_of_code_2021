@@ -22,3 +22,10 @@ day_02_task_2_sample:
 
 day_02_task_2_input:
 	poetry run python -m advent.day_02.task_2 data/day_02/input.txt.gz
+
+
+day_03_task_1_sample:
+	poetry run python -m advent.day_03.task_1 data/day_03/sample.txt
+
+day_03_task_1_input:
+	poetry run python -m advent.day_03.task_1 data/day_03/input.txt.gz
