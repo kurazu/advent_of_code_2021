@@ -4,7 +4,6 @@ import re
 from typing import Iterable, List, TextIO
 
 import numpy as np
-import pandas as pd
 
 from ..cli import run_with_file_argument
 
