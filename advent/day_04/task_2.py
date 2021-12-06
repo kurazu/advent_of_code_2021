@@ -31,6 +31,7 @@ def main(input: TextIO) -> str:
 
     boards_array = np.array(boards)
     assert boards_array.shape[1:] == (BOARD_SIZE, BOARD_SIZE)
+    previous = np.zeros((len(boards_array),), dtype="bool")
     for called_number in called_numbers:
         # cross out a number
         boards_array[boards_array == called_number] = np.nan
@@ -43,20 +44,26 @@ def main(input: TextIO) -> str:
         full_rows = rows >= BOARD_SIZE
         has_full_row = np.any(full_rows, axis=-1)
         assert has_full_row.shape == (len(boards_array),)
-        if np.any(has_full_row):
-            # we have a match, we need to figure out on which board though
-            winning_board_index = np.argmax(has_full_row)
-            break
+        # if np.any(has_full_row):
+        #     # we have a match, we need to figure out on which board though
+        #     winning_board_index = np.argmax(has_full_row)
+        #     break
 
         # check for full columns
         columns = np.sum(eliminated, axis=-2)
         full_columns = columns >= BOARD_SIZE
         has_full_column = np.any(full_columns, axis=-1)
         assert has_full_column.shape == (len(boards_array),)
-        if np.any(has_full_column):
-            # we have a match, we need to figure out on which board though
-            winning_board_index = np.argmax(has_full_column)
+        # if np.any(has_full_column):
+        #     # we have a match, we need to figure out on which board though
+        #     winning_board_index = np.argmax(has_full_column)
+        #     break
+
+        has_full_row_or_column = has_full_row | has_full_column
+        if np.all(has_full_row_or_column):  # we wait until all boards win
+            winning_board_index = np.argmax(~previous)
             break
+        previous = has_full_row_or_column
     else:
         raise AssertionError("No board wins")
 

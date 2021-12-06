@@ -42,3 +42,9 @@ day_04_task_1_sample:
 
 day_04_task_1_input:
 	poetry run python -m advent.day_04.task_1 data/day_04/input.txt.gz
+
+day_04_task_2_sample:
+	poetry run python -m advent.day_04.task_2 data/day_04/sample.txt
+
+day_04_task_2_input:
+	poetry run python -m advent.day_04.task_2 data/day_04/input.txt.gz
