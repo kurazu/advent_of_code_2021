@@ -1,5 +1,5 @@
 import logging
-from typing import TextIO
+from typing import List, TextIO
 
 import numpy as np
 
@@ -9,6 +9,8 @@ logger = logging.getLogger(__name__)
 
 
 def main(input: TextIO) -> str:
+    fish: List[int] = list(map(int, input.readline().strip().split(",")))
+    breakpoint()
     return f"{0}"
 
 
