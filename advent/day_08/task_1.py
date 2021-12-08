@@ -1,7 +1,7 @@
 import enum
 import logging
 from collections import defaultdict
-from typing import Dict, List, NewType, Set, TextIO
+from typing import Dict, List, NewType, Set, TextIO, Tuple
 
 import numpy as np
 
@@ -49,10 +49,9 @@ EASY_DIGITS = {
 }
 
 
-def main(input: TextIO) -> str:
-    logging.info("Easy digits: %s", EASY_DIGITS)
-
-    # input parsing
+def read_data(
+    input: TextIO,
+) -> Tuple[List[List[Set[Segment]]], List[List[Set[Segment]]]]:
     stripped_lines = (line.strip() for line in input)
     non_empty_stripped_lines = filter(None, stripped_lines)
     all_signals: List[List[Set[Segment]]] = []
@@ -65,8 +64,13 @@ def main(input: TextIO) -> str:
         assert len(outputs) == 4
         all_signals.append([{Segment(s) for s in signal} for signal in signals])
         all_outputs.append([{Segment(o) for o in output} for output in outputs])
-    del signals
-    del outputs
+    return all_signals, all_outputs
+
+
+def main(input: TextIO) -> str:
+    logging.info("Easy digits: %s", EASY_DIGITS)
+
+    all_signals, all_outputs = read_data(input)
 
     # calculation
     occurrences = sum(
