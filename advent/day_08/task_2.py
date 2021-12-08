@@ -2,11 +2,8 @@ import logging
 from collections import defaultdict
 from typing import Dict, FrozenSet, List, Set, TextIO
 
-import numpy as np
-
 from ..cli import run_with_file_argument
-from .task_1 import (DIGIT_BY_SEGMENT_COUNT, EASY_DIGITS, SEGMENTS_BY_DIGIT,
-                     Digit, GarbledSegment, Segment, SegmentCount, read_data)
+from .task_1 import EASY_DIGITS, Digit, GarbledSegment, SegmentCount, read_data
 
 logger = logging.getLogger(__name__)
 
