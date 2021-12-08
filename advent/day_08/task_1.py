@@ -23,28 +23,51 @@ class Segment(str, enum.Enum):
     G = "g"
 
 
-# How many segments are needed to display a given digit
-SEGMENTS_BY_DIGIT: Dict[Digit, SegmentCount] = {
-    Digit(0): SegmentCount(6),
-    Digit(1): SegmentCount(2),
-    Digit(2): SegmentCount(5),
-    Digit(3): SegmentCount(5),
-    Digit(4): SegmentCount(4),
-    Digit(5): SegmentCount(5),
-    Digit(6): SegmentCount(6),
-    Digit(7): SegmentCount(3),
-    Digit(8): SegmentCount(7),
-    Digit(9): SegmentCount(6),
+#  aaa
+# b   c
+# b   c
+#  ddd
+# e   f
+# e   f
+#  ggg
+# Segments lit up to display each digit
+SEGMENTS_BY_DIGIT: Dict[Digit, Set[Segment]] = {
+    Digit(0): {Segment.A, Segment.B, Segment.C, Segment.E, Segment.F, Segment.G},
+    Digit(1): {Segment.C, Segment.F},
+    Digit(2): {Segment.A, Segment.C, Segment.D, Segment.E, Segment.G},
+    Digit(3): {Segment.A, Segment.C, Segment.D, Segment.F, Segment.G},
+    Digit(4): {Segment.B, Segment.C, Segment.D, Segment.F},
+    Digit(5): {Segment.A, Segment.B, Segment.D, Segment.F, Segment.G},
+    Digit(6): {Segment.A, Segment.B, Segment.D, Segment.F, Segment.G},
+    Digit(7): {Segment.A, Segment.C, Segment.F},
+    Digit(8): {
+        Segment.A,
+        Segment.B,
+        Segment.C,
+        Segment.D,
+        Segment.E,
+        Segment.F,
+        Segment.G,
+    },
+    Digit(9): {Segment.A, Segment.B, Segment.C, Segment.D, Segment.F, Segment.G},
 }
 
 
-DIGIT_BY_SEGMENTS: Dict[SegmentCount, Set[Digit]] = defaultdict(set)
-for digit, count in SEGMENTS_BY_DIGIT.items():
-    DIGIT_BY_SEGMENTS[count].add(digit)
+# How many segments are needed to display a given digit
+SEGMENTS_COUNT_BY_DIGIT: Dict[Digit, SegmentCount] = {
+    digit: SegmentCount(len(segments)) for digit, segments in SEGMENTS_BY_DIGIT.items()
+}
 
+# Which digit can it be if that many segments are supposed to be lit up.
+DIGIT_BY_SEGMENT_COUNT: Dict[SegmentCount, Set[Digit]] = defaultdict(set)
+for digit, count in SEGMENTS_COUNT_BY_DIGIT.items():
+    DIGIT_BY_SEGMENT_COUNT[count].add(digit)
+
+
+# Digits that can be directly guessed from the number of segments lit up
 EASY_DIGITS = {
     count: next(iter(digits))
-    for count, digits in DIGIT_BY_SEGMENTS.items()
+    for count, digits in DIGIT_BY_SEGMENT_COUNT.items()
     if len(digits) == 1
 }
 
