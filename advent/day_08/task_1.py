@@ -51,6 +51,8 @@ EASY_DIGITS = {
 
 def main(input: TextIO) -> str:
     logging.info("Easy digits: %s", EASY_DIGITS)
+
+    # input parsing
     stripped_lines = (line.strip() for line in input)
     non_empty_stripped_lines = filter(None, stripped_lines)
     all_signals: List[List[Set[Segment]]] = []
@@ -63,8 +65,13 @@ def main(input: TextIO) -> str:
         assert len(outputs) == 4
         all_signals.append([{Segment(s) for s in signal} for signal in signals])
         all_outputs.append([{Segment(o) for o in output} for output in outputs])
-    breakpoint()
-    occurrences = 0
+    del signals
+    del outputs
+
+    # calculation
+    occurrences = sum(
+        1 for outputs in all_outputs for output in outputs if len(output) in EASY_DIGITS
+    )
     return f"{occurrences}"
 
 
