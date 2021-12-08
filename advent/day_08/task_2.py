@@ -1,13 +1,20 @@
 import logging
-from typing import TextIO
+from collections import defaultdict
+from typing import Dict, List, Set, TextIO
 
 import numpy as np
 
 from ..cli import run_with_file_argument
-from .task_1 import (DIGIT_BY_SEGMENTS, EASY_DIGITS, SEGMENTS_BY_DIGIT,
-                     Segment, read_data)
+from .task_1 import (DIGIT_BY_SEGMENT_COUNT, EASY_DIGITS, SEGMENTS_BY_DIGIT,
+                     Digit, GarbledSegment, Segment, SegmentCount, read_data)
 
 logger = logging.getLogger(__name__)
+
+
+def resolve(
+    signals: List[Set[GarbledSegment]], outputs: List[Set[GarbledSegment]]
+) -> List[Digit]:
+    return [Digit(0), Digit(0), Digit(0), Digit(0)]
 
 
 def main(input: TextIO) -> str:
@@ -15,11 +22,18 @@ def main(input: TextIO) -> str:
 
     all_signals, all_outputs = read_data(input)
 
-    # calculation
-    occurrences = sum(
-        1 for outputs in all_outputs for output in outputs if len(output) in EASY_DIGITS
-    )
-    return f"{occurrences}"
+    resolved_sum: int = 0
+    for signals, outputs in zip(all_signals, all_outputs):
+        resolved_output = resolve(signals, outputs)
+        resolved = sum(
+            value * (10 ** power)
+            for value, power in zip(
+                reversed(resolved_output), range(len(resolved_output))
+            )
+        )
+        resolved_sum += resolved
+
+    return f"{resolved_sum}"
 
 
 if __name__ == "__main__":
