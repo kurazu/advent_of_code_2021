@@ -14,7 +14,7 @@ def read_input(input: TextIO) -> npt.NDArray[int]:
     return np.array([list(map(int, line)) for line in get_lines(input)], dtype=int)
 
 
-STEPS = 3
+STEPS = 100
 PADDING = 1
 MAX_ENERGY = 9
 
@@ -48,7 +48,7 @@ def main(input: TextIO) -> str:
             # Increase the power of all neighbouring octopusses
             for y, x in indices:
                 padded_octopusses[
-                    y - 1 + PADDING : y + 1 + PADDING, x - 1 + PADDING : x + 1 + PADDING
+                    y - 1 + PADDING : y + 2 + PADDING, x - 1 + PADDING : x + 2 + PADDING
                 ] += 1
                 # Mark the ones that flashed and remove them from the mask
                 can_still_flash[y, x] = False
