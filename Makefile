@@ -139,3 +139,28 @@ day_11_task_2_sample:
 
 day_11_task_2_input:
 	poetry run python -m advent.day_11.task_2 data/day_11/input.txt.gz
+
+
+day_12_task_1_sample:
+	poetry run python -m advent.day_12.task_1 data/day_12/sample.txt
+
+day_12_task_1_larger_sample:
+	poetry run python -m advent.day_12.task_1 data/day_12/larger-sample.txt
+
+day_12_task_1_largest_sample:
+	poetry run python -m advent.day_12.task_1 data/day_12/largest-sample.txt
+
+day_12_task_1_input:
+	poetry run python -m advent.day_12.task_1 data/day_12/input.txt
+
+day_12_task_2_sample:
+	poetry run python -m advent.day_12.task_2 data/day_12/sample.txt
+
+day_12_task_2_larger_sample:
+	poetry run python -m advent.day_12.task_2 data/day_12/larger-sample.txt
+
+day_12_task_2_largest_sample:
+	poetry run python -m advent.day_12.task_2 data/day_12/largest-sample.txt
+
+day_12_task_2_input:
+	poetry run python -m advent.day_12.task_2 data/day_12/input.txt
