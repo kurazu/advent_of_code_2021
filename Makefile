@@ -141,6 +141,20 @@ day_11_task_2_input:
 	poetry run python -m advent.day_11.task_2 data/day_11/input.txt.gz
 
 
+visualize_day_12_samples:
+	poetry run python -m advent.day_12.visualize \
+		--input=data/day_12/sample.txt \
+		--output=data/day_12/sample.png
+	poetry run python -m advent.day_12.visualize \
+		--input=data/day_12/larger-sample.txt \
+		--output=data/day_12/larger-sample.png
+	poetry run python -m advent.day_12.visualize \
+		--input=data/day_12/largest-sample.txt \
+		--output=data/day_12/largest-sample.png
+	poetry run python -m advent.day_12.visualize \
+		--input=data/day_12/input.txt \
+		--output=data/day_12/input.png
+
 day_12_task_1_sample:
 	poetry run python -m advent.day_12.task_1 data/day_12/sample.txt
 
