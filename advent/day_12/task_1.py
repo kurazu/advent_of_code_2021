@@ -1,7 +1,5 @@
 import logging
-from collections import defaultdict
-from typing import (Dict, Iterable, List, NewType, Optional, Protocol,
-                    Sequence, Set, TextIO)
+from typing import Iterable, Sequence, TextIO
 
 from ..cli import run_with_file_argument
 from .graph import read_graph
