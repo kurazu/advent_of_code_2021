@@ -58,9 +58,20 @@ def format_paper(paper: npt.NDArray[bool]) -> str:
 
 
 def fold_left(paper: npt.NDArray[bool], fold_line: int) -> npt.NDArray[bool]:
-    left = paper[:, fold_line:]
-    right = paper[:, fold_line + 1 :]
-    raise NotImplementedError()
+    # split along the verical line
+    leftside = paper[:, :fold_line]
+    rightside = paper[:, fold_line + 1 :]
+    # flip the right side left-to-right
+    flipped_rightside = rightside[:, ::-1]
+    # create a new canvas the size of the bigger part
+    height, leftside_width = leftside.shape
+    height, rightside_width = flipped_rightside.shape
+    canvas = np.zeros((height, max(leftside_width, rightside_width)), dtype=bool)
+    # paint both leftside and flipped rightside onto the canvas
+    # anchoring both at the canvas right
+    canvas[:, -leftside_width:] |= leftside
+    canvas[:, -rightside_width:] |= flipped_rightside
+    return canvas
 
 
 def fold_up(paper: npt.NDArray[bool], fold_line: int) -> npt.NDArray[bool]:
@@ -90,7 +101,9 @@ def main(input: TextIO) -> str:
     paper = get_paper(input)
     logger.info("Initial paper\n%s", format_paper(paper))
     # not now analyze only the first fold
-    for axis, value in itertools.islice(get_folds(input), 1):
+    folds = get_folds(input)
+    folds = itertools.islice(folds, 1)
+    for axis, value in folds:
         folding_callback = FOLDING_MAP[axis]
         paper = folding_callback(paper, value)
         logger.info("After folding %s at %s\n%s", axis.name, value, format_paper(paper))
