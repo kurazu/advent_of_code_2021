@@ -6,7 +6,7 @@ from typing import Dict, Iterable, List, NewType, TextIO, Tuple, TypeVar
 from returns.curry import partial
 
 from ..cli import run_with_file_argument
-from ..io_utils import get_lines
+from ..io_utils import get_lines, read_empty_line
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ def main(input: TextIO, steps: int) -> str:
     polymer: Iterable[Element] = get_polymer(input)
     logger.info("Initial polymer %s", "".join(polymer))
 
-    assert input.readline().strip() == ""  # expect empty line
+    read_empty_line(input)
 
     rules = get_rules(input)
 
