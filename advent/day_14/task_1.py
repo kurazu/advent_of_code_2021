@@ -3,13 +3,14 @@ import logging
 import re
 from typing import Dict, Iterable, List, NewType, TextIO, Tuple, TypeVar
 
+from returns.curry import partial
+
 from ..cli import run_with_file_argument
 from ..io_utils import get_lines
 
 logger = logging.getLogger(__name__)
 
 Element = NewType("Element", str)
-STEPS = 10
 
 
 def get_polymer(input: TextIO) -> List[Element]:
@@ -56,7 +57,7 @@ def grow_polymer(polymer: Iterable[Element], rules: RulesDict) -> Iterable[Eleme
     yield end
 
 
-def main(input: TextIO) -> str:
+def main(input: TextIO, steps: int) -> str:
     polymer: Iterable[Element] = get_polymer(input)
     logger.info("Initial polymer %s", "".join(polymer))
 
@@ -64,7 +65,7 @@ def main(input: TextIO) -> str:
 
     rules = get_rules(input)
 
-    for step in range(STEPS):
+    for step in range(steps):
         polymer = grow_polymer(polymer, rules)
 
     counter = collections.Counter(polymer)
@@ -83,4 +84,4 @@ def main(input: TextIO) -> str:
 
 
 if __name__ == "__main__":
-    run_with_file_argument(main)
+    run_with_file_argument(partial(main, steps=10))
