@@ -1,9 +1,5 @@
-import collections
 import logging
-import operator
-import re
-from collections import defaultdict
-from typing import Dict, Iterable, List, NewType, TextIO, Tuple, TypeVar
+from typing import Dict, Iterable, TextIO, Tuple
 
 from returns.curry import partial
 
