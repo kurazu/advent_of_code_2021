@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-import collections
 import logging
-import re
-from typing import (Dict, Iterable, List, NamedTuple, NewType, TextIO, Tuple,
-                    TypeVar)
+from typing import Iterable, NamedTuple, TextIO
 
 import numpy as np
 
@@ -31,9 +28,6 @@ class Point(NamedTuple):
         return Point(x=self.x, y=self.y + 1)
 
 
-INVALID_COORDINATE = -1
-
-
 def main(input: TextIO) -> str:
     # read the map
     world = read_numbers_array(input)
@@ -43,10 +37,6 @@ def main(input: TextIO) -> str:
     max_value = np.iinfo(world.dtype).max
     distances = np.zeros_like(world)
     distances.fill(max_value)
-
-    # for storing previous point
-    previous_point = np.zeros((height, width, 2))
-    previous_point.fill(INVALID_COORDINATE)
 
     # Mask of visited points
     visited = np.zeros_like(world, dtype=bool)
