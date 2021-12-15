@@ -4,6 +4,8 @@ import logging
 from typing import Iterable, NamedTuple, TextIO
 
 import numpy as np
+import numpy.typing as npt
+from tqdm import tqdm
 
 from ..cli import run_with_file_argument
 from ..io_utils import read_numbers_array
@@ -28,9 +30,7 @@ class Point(NamedTuple):
         return Point(x=self.x, y=self.y + 1)
 
 
-def main(input: TextIO) -> str:
-    # read the map
-    world = read_numbers_array(input)
+def find_route_risk(world: npt.NDArray[int]) -> int:
     height, width = world.shape
 
     # the distances are all set to "infinity"
@@ -80,17 +80,22 @@ def main(input: TextIO) -> str:
 
     # calculate distances from start point to all other points
     # using Dijkstra's algorithm
-    while not np.all(visited):
+    for _ in tqdm(range(width * height)):
         current = choose_current()
-        logger.info("Visiting %d,%d [%d]", current.x, current.y, world[current])
         for neighbour in get_unvisited_neighbours(current):
             cost = world[neighbour]
             distances[neighbour] = min(distances[neighbour], distances[current] + cost)
         visited[current] = True
-    logger.info("Distances:\n%s", distances)
 
     # query for distance to end point
-    risk = distances[end_point]
+    risk: int = distances[end_point]
+    return risk
+
+
+def main(input: TextIO) -> str:
+    # read the map
+    world = read_numbers_array(input)
+    risk = find_route_risk(world)
     return f"{risk}"
 
 
