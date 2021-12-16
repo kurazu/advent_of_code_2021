@@ -1,10 +1,9 @@
+import functools
 import io
 import logging
+import operator
 from dataclasses import dataclass
-from typing import Iterable, List, NamedTuple, TextIO
-
-import numpy as np
-import numpy.typing as npt
+from typing import Callable, Dict, Iterable, List, Protocol, TextIO
 
 from ..cli import run_with_file_argument
 from ..io_utils import read_line
@@ -16,19 +15,86 @@ logger = logging.getLogger(__name__)
 class Packet:
     version: int
 
+    def get_value(self) -> int:
+        raise NotImplementedError()
+
 
 @dataclass
 class LiteralPacket(Packet):
     value: int
 
+    def get_value(self) -> int:
+        return self.value
+
 
 @dataclass
 class OperatorPacket(Packet):
-    type_id: int
     cargo: List[Packet]
+
+    def get_values(self) -> Iterable[int]:
+        return (packet.get_value() for packet in self.cargo)
+
+
+@dataclass
+class SumPacket(OperatorPacket):
+    def get_value(self) -> int:
+        return sum(self.get_values())
+
+
+@dataclass
+class ProductPacket(OperatorPacket):
+    def get_value(self) -> int:
+        return functools.reduce(operator.mul, self.get_values())
+
+
+@dataclass
+class MinPacket(OperatorPacket):
+    def get_value(self) -> int:
+        return min(self.get_values())
+
+
+@dataclass
+class MaxPacket(OperatorPacket):
+    def get_value(self) -> int:
+        return max(self.get_values())
+
+
+@dataclass
+class GreaterPacket(OperatorPacket):
+    def get_value(self) -> int:
+        first, second = self.get_values()
+        return first > second
+
+
+@dataclass
+class LessPacket(OperatorPacket):
+    def get_value(self) -> int:
+        first, second = self.get_values()
+        return first < second
+
+
+@dataclass
+class EqualPacket(OperatorPacket):
+    def get_value(self) -> int:
+        first, second = self.get_values()
+        return first == second
+
+
+class OperatorPacketCreator(Protocol):
+    def __call__(self, version: int, cargo: List[Packet]) -> OperatorPacket:
+        ...
 
 
 LITERAL_PACKET_TYPE_ID = 4
+OPERATOR_PACKET_TYPES: Dict[int, OperatorPacketCreator] = {
+    0: SumPacket,
+    1: ProductPacket,
+    2: MinPacket,
+    3: MaxPacket,
+    5: GreaterPacket,
+    6: LessPacket,
+    7: EqualPacket,
+}
 
 
 def read_literal_packet(version: int, buf: io.StringIO) -> LiteralPacket:
@@ -67,7 +133,7 @@ def read_operator_packet(
     else:
         assert length_mode == "1"
         subpackets = read_subpackets_by_count(buf)
-    return OperatorPacket(version=version, type_id=type_id, cargo=subpackets)
+    return OPERATOR_PACKET_TYPES[type_id](version=version, cargo=subpackets)
 
 
 def read_packet(buf: io.StringIO) -> Packet:
