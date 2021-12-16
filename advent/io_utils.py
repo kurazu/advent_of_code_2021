@@ -16,3 +16,7 @@ def read_empty_line(input: TextIO) -> None:
 
 def read_numbers_array(input: TextIO) -> npt.NDArray[int]:
     return np.array([list(map(int, line)) for line in get_lines(input)], dtype=int)
+
+
+def read_line(input: TextIO) -> str:
+    return input.readline().strip()
