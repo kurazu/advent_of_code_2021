@@ -54,7 +54,7 @@ def drag_x_velocity(x_velocity: int) -> int:
 
 
 def fire(velocity: Vector, target_area: TargetArea) -> Optional[int]:
-    logger.info("Firing %s", velocity)
+    # logger.info("Firing %s", velocity)
     position = Vector(x=0, y=0)
     positions = [position]
     while position.x <= target_area.max_x and position.y >= target_area.min_y:
@@ -62,16 +62,8 @@ def fire(velocity: Vector, target_area: TargetArea) -> Optional[int]:
         positions.append(position)
         velocity.x = drag_x_velocity(velocity.x)
         velocity.y -= 1
-        logger.info(
-            "After step %d the position is x=%d,y=%d",
-            len(positions) - 1,
-            position.x,
-            position.y,
-        )
         if position in target_area:
-            logger.info("HIT!")
             return max(position.y for position in positions)
-    logger.info("Miss x=%d,y=%d", position.x, position.y)
     return None
 
 
@@ -87,18 +79,21 @@ def find_valid_x_velocities(target_area: TargetArea) -> Iterable[int]:
         x_velocity += 1
 
 
-def main(input: TextIO) -> str:
-    # read the map
+def get_target_area(input: TextIO) -> TargetArea:
     target_spec = read_line(input)
     match = TARGET_SPEC_PATTERN.match(target_spec)
     assert match is not None
 
-    target_area = TargetArea(
+    return TargetArea(
         min_x=int(match.group("min_x")),
         max_x=int(match.group("max_x")),
         min_y=int(match.group("min_y")),
         max_y=int(match.group("max_y")),
     )
+
+
+def main(input: TextIO) -> str:
+    target_area = get_target_area(input)
 
     logger.info("Target area: %s", target_area)
 
