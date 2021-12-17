@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from typing import (Callable, Dict, Iterable, List, NamedTuple, Optional,
                     Protocol, TextIO)
 
+from returns.curry import partial
+
 from ..cli import run_with_file_argument
 from ..io_utils import read_line
 
@@ -52,6 +54,7 @@ def drag_x_velocity(x_velocity: int) -> int:
 
 
 def fire(velocity: Vector, target_area: TargetArea) -> Optional[int]:
+    logger.info("Firing %s", velocity)
     position = Vector(x=0, y=0)
     positions = [position]
     while position.x <= target_area.max_x and position.y >= target_area.min_y:
@@ -61,7 +64,7 @@ def fire(velocity: Vector, target_area: TargetArea) -> Optional[int]:
         velocity.y -= 1
         logger.info(
             "After step %d the position is x=%d,y=%d",
-            len(positions),
+            len(positions) - 1,
             position.x,
             position.y,
         )
@@ -72,6 +75,16 @@ def fire(velocity: Vector, target_area: TargetArea) -> Optional[int]:
     return None
 
 
+def arithmetic_progression_sum(n: int) -> int:
+    return ((1 + n) * n) // 2
+
+
+def find_valid_x_velocities(target_area: TargetArea) -> Iterable[int]:
+    x_velocity = 1
+    while (x_distance := arithmetic_progression_sum(x_velocity)) <= target_area.max_x:
+        if x_distance >= target_area.min_x:
+            yield x_velocity
+        x_velocity += 1
 
 
 def main(input: TextIO) -> str:
@@ -93,8 +106,24 @@ def main(input: TextIO) -> str:
     logger.info("max y=%s", max_y)
     max_y = fire(Vector(x=6, y=3), target_area)
     logger.info("max y=%s", max_y)
+    max_y = fire(Vector(x=17, y=-4), target_area)
+    logger.info("max y=%s", max_y)
+    max_y = fire(Vector(x=6, y=9), target_area)
+    logger.info("max y=%s", max_y)
 
-    top_y = 0
+    valid_x_velocities = list(find_valid_x_velocities(target_area))
+    logger.info("x velocities to try %s", valid_x_velocities)
+
+    velocities_to_try = (
+        Vector(x=x_velocity, y=y_velocity)
+        for x_velocity in valid_x_velocities
+        for y_velocity in range(1000, -1000, -1)
+    )
+    best_ys = filter(
+        None, map(partial(fire, target_area=target_area), velocities_to_try)
+    )
+
+    top_y = max(best_ys)
     return f"{top_y}"
 
 
