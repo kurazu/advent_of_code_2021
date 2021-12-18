@@ -110,8 +110,9 @@ class LiteralNumber(SnailfishNumber):
     def visit(self) -> Iterable[SnailfishNumber]:
         yield self
 
-    def add(self, other: int) -> None:
+    def __iadd__(self, other: int) -> LiteralNumber:
         self.value += other
+        return self
 
 
 def parse_number(value: Any) -> SnailfishNumber:
@@ -226,13 +227,13 @@ def explode_number(
     assert isinstance(left, LiteralNumber)
     closest_left_literal = find_closest_literal_on_the_left(root, left)
     if closest_left_literal is not None:
-        closest_left_literal.add(left.value)
+        closest_left_literal += left.value
 
     right = node_to_explode.right
     assert isinstance(right, LiteralNumber)
     closest_right_literal = find_closest_literal_on_the_right(root, right)
     if closest_right_literal is not None:
-        closest_right_literal.add(right.value)
+        closest_right_literal += right.value
 
     parent = node_to_explode.parent
     assert parent is not None
