@@ -2,11 +2,9 @@ from __future__ import annotations
 
 import abc
 import ast
-import enum
 import logging
 from functools import reduce
-from typing import (Any, Iterable, List, NamedTuple, Optional, TextIO, Tuple,
-                    cast)
+from typing import Any, Iterable, Optional, TextIO
 
 from ..cli import run_with_file_argument
 from ..io_utils import get_lines
@@ -35,8 +33,18 @@ class SnailfishNumber(metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         ...
+
+    @abc.abstractmethod
+    def visit(self) -> Iterable[SnailfishNumber]:
+        ...
+
+    def get_parents(self) -> Iterable[SnailfishNumber]:
+        if self.parent is None:
+            return
+        yield self.parent
+        yield from self.parent.get_parents()
 
 
 class ContainerNumber(SnailfishNumber):
@@ -71,8 +79,13 @@ class ContainerNumber(SnailfishNumber):
     def get_magnitude(self) -> int:
         return 3 * self.left.get_magnitude() + 2 * self.right.get_magnitude()
 
-    def __str__(self) -> str:
-        return f"[{self.left},{self.right}]"
+    def __repr__(self) -> str:
+        return f"[{self.left!r},{self.right!r}]"
+
+    def visit(self) -> Iterable[SnailfishNumber]:
+        yield self
+        yield from self.left.visit()
+        yield from self.right.visit()
 
 
 class LiteralNumber(SnailfishNumber):
@@ -91,8 +104,15 @@ class LiteralNumber(SnailfishNumber):
     def get_magnitude(self) -> int:
         return self.value
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         return f"{self.value}"
+
+    def visit(self) -> Iterable[SnailfishNumber]:
+        yield self
+
+    def __iadd__(self, other: int) -> LiteralNumber:
+        self.value += other
+        return self
 
 
 def parse_number(value: Any) -> SnailfishNumber:
@@ -148,65 +168,118 @@ def get_numbers(input: TextIO) -> Iterable[ContainerNumber]:
 #     yield from _visit_pairs(number, [])
 
 
-# def find_leftmost_nested_pair(
-#     number: SnailfishNumber,
-# ) -> Optional[TreePath]:
-#     for path in visit_pairs(number):
-#         if len(path.parents) == 4:
-#             return path
-#     return None
+def find_leftmost_nested_pair(
+    number: SnailfishNumber,
+) -> Optional[ContainerNumber]:
+    for node in number.visit():
+        if (
+            isinstance(node, ContainerNumber)
+            and sum(1 for parent in node.get_parents()) == 4
+        ):
+            return node
+    return None
 
 
-# def find_leftmost_big_number(
-#     number: SnailfishNumber,
-# ) -> Optional[Tuple[TreePath, Side]]:
-#     for path in visit_pairs(number):
-#         left, right = path.node
-#         if isinstance(left, int) and left >= 10:
-#             return path, Side.LEFT
-#         if isinstance(right, int) and right >= 10:
-#             return path, Side.RIGHT
-#     return None
+def find_leftmost_big_number(
+    number: SnailfishNumber,
+) -> Optional[LiteralNumber]:
+    for node in number.visit():
+        if isinstance(node, LiteralNumber) and node.value >= 10:
+            return node
+    return None
 
 
-# def explode_number(path: TreePath) -> SnailfishNumber:
-#     breakpoint()
+def find_closest_literal_on_the_left(
+    root: ContainerNumber, child: SnailfishNumber
+) -> Optional[LiteralNumber]:
+    last_literal_seen: Optional[LiteralNumber] = None
+    for node in root.visit():
+        if node is child:
+            break
+        elif isinstance(node, LiteralNumber):
+            last_literal_seen = node
+    else:
+        raise AssertionError()
+    return last_literal_seen
 
 
-# def split_number(path: TreePath, side: Side) -> SnailfishNumber:
-#     breakpoint()
+def find_closest_literal_on_the_right(
+    root: ContainerNumber, child: SnailfishNumber
+) -> Optional[LiteralNumber]:
+    nodes = root.visit()
+    for node in nodes:
+        if node is child:
+            break
+    else:
+        raise AssertionError()
+
+    for node in nodes:
+        if isinstance(node, LiteralNumber):
+            return node
+    else:
+        return None
 
 
-def reduce_snailfish_number(number: SnailfishNumber) -> SnailfishNumber:
+def explode_number(
+    root: ContainerNumber, node_to_explode: ContainerNumber
+) -> ContainerNumber:
+    left = node_to_explode.left
+    assert isinstance(left, LiteralNumber)
+    closest_left_literal = find_closest_literal_on_the_left(root, node_to_explode)
+    if closest_left_literal is not None:
+        closest_left_literal += left.value
+
+    right = node_to_explode.right
+    assert isinstance(right, LiteralNumber)
+    closest_right_literal = find_closest_literal_on_the_right(root, node_to_explode)
+    if closest_right_literal is not None:
+        closest_right_literal += right.value
+
+    parent = node_to_explode.parent
+    assert parent is not None
+    assert isinstance(parent, ContainerNumber)
+    parent.replace_child(node_to_explode, LiteralNumber(0))
+
+    return root
+
+
+def split_number(
+    root: ContainerNumber, node_to_split: LiteralNumber
+) -> ContainerNumber:
+    raise NotImplementedError()
+
+
+def reduce_snailfish_number(number: ContainerNumber) -> ContainerNumber:
     while True:
-        path = find_leftmost_nested_pair(number)
-        if path is not None:
-            number = explode_number(path)
+        container_node = find_leftmost_nested_pair(number)
+        if container_node is not None:
+            number = explode_number(number, container_node)
             continue
-        path_and_side = find_leftmost_big_number(number)
-        if path_and_side is not None:
-            path, side = path_and_side
-            number = split_number(path, side)
+        literal_node = find_leftmost_big_number(number)
+        if literal_node is not None:
+            number = split_number(number, literal_node)
             continue
         # No more action to take
         break
     return number
 
 
-def add_snailfish_numbers(a: SnailfishNumber, b: SnailfishNumber) -> SnailfishNumber:
+def add_snailfish_numbers(
+    left: ContainerNumber, right: ContainerNumber
+) -> ContainerNumber:
     container = ContainerNumber()
-    container.set_left(a)
-    container.set_right(b)
+    container.set_left(left)
+    container.set_right(right)
     return container
 
 
-def sum_snailfish_numbers(numbers: Iterable[SnailfishNumber]) -> SnailfishNumber:
+def sum_snailfish_numbers(numbers: Iterable[ContainerNumber]) -> ContainerNumber:
     return reduce(add_and_reduce_snailfish_numbers, numbers)
 
 
 def add_and_reduce_snailfish_numbers(
-    a: SnailfishNumber, b: SnailfishNumber
-) -> SnailfishNumber:
+    a: ContainerNumber, b: ContainerNumber
+) -> ContainerNumber:
     return reduce_snailfish_number(add_snailfish_numbers(a, b))
 
 
