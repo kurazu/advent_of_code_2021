@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable, List, Tuple
+from typing import Any, Iterable, List, Tuple
 
 import pytest
 from advent.day_18.task_1 import (add_and_reduce_snailfish_numbers,
@@ -46,7 +46,7 @@ REDUCE_SAMPLES: List[Tuple[str, str]] = [
 
 
 @pytest.mark.parametrize("number,expected", REDUCE_SAMPLES)
-def test_reduce_snailfish_number(number: str, expected: str, caplog) -> None:
+def test_reduce_snailfish_number(number: str, expected: str, caplog: Any) -> None:
     caplog.set_level(logging.INFO)
     parsed_number = get_number(number)
     parsed_expected = get_number(expected)
