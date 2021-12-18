@@ -110,9 +110,8 @@ class LiteralNumber(SnailfishNumber):
     def visit(self) -> Iterable[SnailfishNumber]:
         yield self
 
-    def __iadd__(self, other: int) -> LiteralNumber:
+    def add(self, other: int) -> None:
         self.value += other
-        return self
 
 
 def parse_number(value: Any) -> SnailfishNumber:
@@ -225,15 +224,15 @@ def explode_number(
 ) -> ContainerNumber:
     left = node_to_explode.left
     assert isinstance(left, LiteralNumber)
-    closest_left_literal = find_closest_literal_on_the_left(root, node_to_explode)
+    closest_left_literal = find_closest_literal_on_the_left(root, left)
     if closest_left_literal is not None:
-        closest_left_literal += left.value
+        closest_left_literal.add(left.value)
 
     right = node_to_explode.right
     assert isinstance(right, LiteralNumber)
-    closest_right_literal = find_closest_literal_on_the_right(root, node_to_explode)
+    closest_right_literal = find_closest_literal_on_the_right(root, right)
     if closest_right_literal is not None:
-        closest_right_literal += right.value
+        closest_right_literal.add(right.value)
 
     parent = node_to_explode.parent
     assert parent is not None
@@ -253,6 +252,7 @@ def reduce_snailfish_number(number: ContainerNumber) -> ContainerNumber:
     while True:
         container_node = find_leftmost_nested_pair(number)
         if container_node is not None:
+            breakpoint()
             number = explode_number(number, container_node)
             continue
         literal_node = find_leftmost_big_number(number)
