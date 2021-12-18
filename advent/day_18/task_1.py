@@ -3,7 +3,7 @@ from __future__ import annotations
 import ast
 import logging
 from functools import reduce
-from typing import Any, Iterable, TextIO, Tuple, cast
+from typing import Any, Iterable, List, Optional, TextIO, Tuple, cast
 
 from ..cli import run_with_file_argument
 from ..io_utils import get_lines
@@ -33,8 +33,39 @@ def get_magnitude(number: SnailFishNumber) -> int:
     return 3 * left_value + 2 * right_value
 
 
-def reduce_snailfish_number(number: SnailFishNumber) -> SnailFishNumber:
+def find_leftmost_nested_pair(
+    number: SnailFishNumber,
+) -> Optional[List[SnailFishNumber]]:
     pass
+
+
+def find_leftmost_big_number(
+    number: SnailFishNumber,
+) -> Optional[List[SnailFishNumber]]:
+    pass
+
+
+def explode_number(path: List[SnailFishNumber]) -> SnailFishNumber:
+    pass
+
+
+def split_number(path: List[SnailFishNumber]) -> SnailFishNumber:
+    pass
+
+
+def reduce_snailfish_number(number: SnailFishNumber) -> SnailFishNumber:
+    while True:
+        path = find_leftmost_nested_pair(number)
+        if path is not None:
+            number = explode_number(path)
+            continue
+        path = find_leftmost_big_number(number)
+        if path is not None:
+            number = split_number(path)
+            continue
+        # No more action to take
+        break
+    return number
 
 
 def add_snailfish_numbers(a: SnailFishNumber, b: SnailFishNumber) -> SnailFishNumber:
