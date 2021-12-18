@@ -1,3 +1,4 @@
+import logging
 from typing import Iterable, List, Tuple
 
 import pytest
@@ -45,7 +46,8 @@ REDUCE_SAMPLES: List[Tuple[str, str]] = [
 
 
 @pytest.mark.parametrize("number,expected", REDUCE_SAMPLES)
-def test_reduce_snailfish_number(number: str, expected: str) -> None:
+def test_reduce_snailfish_number(number: str, expected: str, caplog) -> None:
+    caplog.set_level(logging.INFO)
     parsed_number = get_number(number)
     parsed_expected = get_number(expected)
     assert reduce_snailfish_number(parsed_number) == parsed_expected

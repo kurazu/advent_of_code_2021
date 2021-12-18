@@ -3,6 +3,7 @@ from __future__ import annotations
 import abc
 import ast
 import logging
+import math
 from functools import reduce
 from typing import Any, Iterable, Optional, TextIO
 
@@ -243,25 +244,45 @@ def explode_number(
     return root
 
 
+def split_node(value: int) -> ContainerNumber:
+    half = value / 2
+    left_value = math.floor(half)
+    right_value = math.ceil(half)
+    container = ContainerNumber()
+    container.set_left(LiteralNumber(left_value))
+    container.set_right(LiteralNumber(right_value))
+    return container
+
+
 def split_number(
     root: ContainerNumber, node_to_split: LiteralNumber
 ) -> ContainerNumber:
-    raise NotImplementedError()
+    replacement = split_node(node_to_split.value)
+
+    parent = node_to_split.parent
+    assert parent is not None
+    assert isinstance(parent, ContainerNumber)
+    parent.replace_child(node_to_split, replacement)
+
+    return root
 
 
 def reduce_snailfish_number(number: ContainerNumber) -> ContainerNumber:
+    logger.info("Reducing number %r", number)
     while True:
         container_node = find_leftmost_nested_pair(number)
         if container_node is not None:
-            breakpoint()
             number = explode_number(number, container_node)
+            logger.info("After exploding %r", number)
             continue
         literal_node = find_leftmost_big_number(number)
         if literal_node is not None:
             number = split_number(number, literal_node)
+            logger.info("After splitting %r", number)
             continue
         # No more action to take
         break
+    logger.info("Reduced to %r", number)
     return number
 
 
