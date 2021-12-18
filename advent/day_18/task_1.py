@@ -33,14 +33,28 @@ def get_magnitude(number: SnailFishNumber) -> int:
     return 3 * left_value + 2 * right_value
 
 
+def reduce_snailfish_number(number: SnailFishNumber) -> SnailFishNumber:
+    pass
+
+
 def add_snailfish_numbers(a: SnailFishNumber, b: SnailFishNumber) -> SnailFishNumber:
     pass
+
+
+def sum_snailfish_numbers(numbers: Iterable[SnailFishNumber]) -> SnailFishNumber:
+    return reduce(add_and_reduce_snailfish_numbers, numbers)
+
+
+def add_and_reduce_snailfish_numbers(
+    a: SnailFishNumber, b: SnailFishNumber
+) -> SnailFishNumber:
+    return reduce_snailfish_number(add_snailfish_numbers(a, b))
 
 
 def main(input: TextIO) -> str:
     numbers = get_numbers(input)
 
-    final_sum = reduce(add_snailfish_numbers, numbers)
+    final_sum = sum_snailfish_numbers(numbers)
     magnitude = get_magnitude(final_sum)
 
     return f"{magnitude}"
