@@ -33,24 +33,52 @@ def get_magnitude(number: SnailFishNumber) -> int:
     return 3 * left_value + 2 * right_value
 
 
+def visit_pairs(
+    number: SnailFishNumber,
+) -> Iterable[List[SnailFishNumber]]:
+    def _visit_pairs(
+        number: SnailFishNumber, path: List[SnailFishNumber]
+    ) -> Iterable[List[SnailFishNumber]]:
+        current_path = path + [number]
+        yield current_path
+        left, right = number
+        if isinstance(left, tuple):
+            yield from _visit_pairs(cast(SnailFishNumber, left), current_path)
+        if isinstance(right, tuple):
+            yield from _visit_pairs(cast(SnailFishNumber, right), current_path)
+
+    yield from _visit_pairs(number, [])
+
+
 def find_leftmost_nested_pair(
     number: SnailFishNumber,
 ) -> Optional[List[SnailFishNumber]]:
-    pass
+    for path in visit_pairs(number):
+        if len(path) == 5:
+            return path
+    return None
 
 
 def find_leftmost_big_number(
     number: SnailFishNumber,
 ) -> Optional[List[SnailFishNumber]]:
-    pass
+    for path in visit_pairs(number):
+        *parents, pair = path
+        left, right = pair
+        if isinstance(left, int) and left >= 10:
+            return path
+        if isinstance(right, int) and right >= 10:
+            return path
+    return None
 
 
 def explode_number(path: List[SnailFishNumber]) -> SnailFishNumber:
-    pass
+    *parents, pair = path
+    left, right = pair
 
 
 def split_number(path: List[SnailFishNumber]) -> SnailFishNumber:
-    pass
+    breakpoint()
 
 
 def reduce_snailfish_number(number: SnailFishNumber) -> SnailFishNumber:
