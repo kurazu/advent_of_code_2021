@@ -2,8 +2,8 @@ from typing import Iterable, List, Tuple
 
 import pytest
 from advent.day_18.task_1 import (add_and_reduce_snailfish_numbers,
-                                  add_snailfish_numbers, get_magnitude,
-                                  get_number, reduce_snailfish_number,
+                                  add_snailfish_numbers, get_number,
+                                  reduce_snailfish_number,
                                   sum_snailfish_numbers)
 
 GET_MAGNITUDE_SAMPLES: List[Tuple[str, int]] = [
@@ -22,7 +22,7 @@ GET_MAGNITUDE_SAMPLES: List[Tuple[str, int]] = [
 @pytest.mark.parametrize("number,expected_magnitude", GET_MAGNITUDE_SAMPLES)
 def test_get_magnitude(number: str, expected_magnitude: int) -> None:
     snailfish_number = get_number(number)
-    magnitude = get_magnitude(snailfish_number)
+    magnitude = snailfish_number.get_magnitude()
     assert magnitude == expected_magnitude
 
 
