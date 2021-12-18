@@ -38,7 +38,7 @@ def reduce_snailfish_number(number: SnailFishNumber) -> SnailFishNumber:
 
 
 def add_snailfish_numbers(a: SnailFishNumber, b: SnailFishNumber) -> SnailFishNumber:
-    pass
+    return (a, b)
 
 
 def sum_snailfish_numbers(numbers: Iterable[SnailFishNumber]) -> SnailFishNumber:

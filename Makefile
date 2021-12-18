@@ -264,7 +264,7 @@ day_17_task_2_input:
 
 
 day_18_task_1_test:
-	poetry run pytest -s -vv --full-trace -x advent/day_18/test_task_1.py
+	poetry run pytest -s -vv advent/day_18/test_task_1.py
 
 day_18_task_1_sample:
 	poetry run python -m advent.day_18.task_1 data/day_18/sample.txt

@@ -100,8 +100,14 @@ ADD_AND_REDUCE_SAMPLES: List[Tuple[str, str, str]] = [
 ]
 
 
+@pytest.mark.parametrize("left,right,expected", ADD_AND_REDUCE_SAMPLES)
 def test_add_and_reduce_snailfish_numbers(left: str, right: str, expected: str) -> None:
-    pass
+    parsed_left = get_number(left)
+    parsed_right = get_number(right)
+    parsed_expected = get_number(expected)
+    assert (
+        add_and_reduce_snailfish_numbers(parsed_left, parsed_right) == parsed_expected
+    )
 
 
 SUM_SAMPLES: List[Tuple[Iterable[str], str]] = [
