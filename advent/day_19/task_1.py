@@ -135,7 +135,62 @@ def resolve_scanner(
         distance(target_beacons[target_node_b], target_beacons[target_node_c])
         == source_b_to_c
     )
-    breakpoint()
+
+    # now figure out the coords transformation
+    source_a_coords = source_beacons[source_node_a]
+    target_a_coords = target_beacons[target_node_a]
+    source_b_coords = source_beacons[source_node_b]
+    target_b_coords = target_beacons[target_node_b]
+
+    # analyze how the coords change for a know pair of mirrored
+    source_vector = source_a_coords - source_b_coords
+    target_vector = target_a_coords - target_b_coords
+
+    # to execute the naive approach we need the translation to be unique on all axes
+    abs_source_vector = np.abs(source_vector)
+    assert len(np.unique(abs_source_vector)) == 3
+    abs_target_vector = np.abs(target_vector)
+    assert len(np.unique(abs_target_vector)) == 3
+
+    # the absolute differences should match
+    assert set(abs_source_vector) == set(abs_target_vector)
+
+    # now we just need to figure out which axis is which and then the scanners position
+    rotation_matrix = np.zeros((3, 3), dtype=int)
+    for source_axis, abs_source_value in enumerate(abs_source_vector):
+        (target_axis,) = np.where(abs_target_vector == abs_source_value)
+        is_negated = np.sign(source_vector[source_axis]) != np.sign(
+            target_vector[target_axis]
+        )
+        logger.info(
+            "Source axis %d (value %d) is target axis %d (value %d) %s",
+            source_axis,
+            source_vector[source_axis],
+            target_axis,
+            target_vector[target_axis],
+            "negated" if is_negated else "direct",
+        )
+        rotation_matrix[target_axis, source_axis] = -1 if is_negated else 1
+    logger.info("Rotation matrix is %s", rotation_matrix)
+
+    # make sure the our rotation matrix works
+    assert np.array_equal(target_vector @ rotation_matrix, source_vector)
+
+    # now figure out the scanners translation offsets
+    translation_matrix = source_a_coords - (target_a_coords @ rotation_matrix)
+    logger.info("Translation matrix is %s", translation_matrix)
+
+    # make sure that the whole rotation and translation works
+    assert np.array_equal(
+        target_a_coords @ rotation_matrix + translation_matrix, source_a_coords
+    )
+    assert np.array_equal(
+        target_b_coords @ rotation_matrix + translation_matrix, source_b_coords
+    )
+
+    # Now we can map all points from the target scanner into source scanner's coords
+    result: npt.NDArray[int] = target_beacons @ rotation_matrix + translation_matrix
+    return result
 
 
 def main(input: TextIO) -> str:
@@ -187,6 +242,16 @@ def main(input: TextIO) -> str:
     resolved_scanner = resolve_scanner(
         scanners[source_scanner_idx], scanners[target_scanner_idx]
     )
+    # make sure that at least the required 12 points are matching
+    assert (
+        len(
+            set(map(tuple, resolved_scanner))
+            & set(map(tuple, scanners[source_scanner_idx]))
+        )
+        >= 12
+    )
+
+    breakpoint()
 
     number_of_beacons = 0
     return f"{number_of_beacons}"
