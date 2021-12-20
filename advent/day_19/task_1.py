@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 import logging
 import math
 import re
@@ -237,23 +238,45 @@ def main(input: TextIO) -> str:
     nx.nx_pydot.to_pydot(neighbourhood_graph).write_png("neighbourhood_graph.png")
 
     # We need to start resolving our graphs
+    # we consider the first scanner to be canonical
+    # we will do a DFS run through the neighbourhood graph, unifiying scanners
+    # as we go
     source_scanner_idx = 0
-    target_scanner_idx = next(iter(neighbourhood_graph.neighbors(source_scanner_idx)))
-    resolved_scanner = resolve_scanner(
-        scanners[source_scanner_idx], scanners[target_scanner_idx]
-    )
-    # make sure that at least the required 12 points are matching
-    assert (
-        len(
-            set(map(tuple, resolved_scanner))
-            & set(map(tuple, scanners[source_scanner_idx]))
-        )
-        >= 12
-    )
+    unresolved_nodes = set(range(1, len(scanners)))
 
-    breakpoint()
+    def traverse_neighbourhood(source_scanner_idx: int) -> None:
+        for neighbour_scanner_idx in neighbourhood_graph.neighbors(source_scanner_idx):
+            if neighbour_scanner_idx not in unresolved_nodes:
+                continue  # already visited
 
-    number_of_beacons = 0
+            # resolve and update this scanner
+            resolved_scanner = resolve_scanner(
+                scanners[source_scanner_idx], scanners[neighbour_scanner_idx]
+            )
+            # make sure that at least the required 12 points are matching
+            assert (
+                len(
+                    set(map(tuple, resolved_scanner))
+                    & set(map(tuple, scanners[source_scanner_idx]))
+                )
+                >= 12
+            )
+
+            scanners[neighbour_scanner_idx] = resolved_scanner
+            unresolved_nodes.remove(neighbour_scanner_idx)
+            logger.info("Resolved scanner %d", neighbour_scanner_idx)
+
+            traverse_neighbourhood(neighbour_scanner_idx)
+
+    # Resolve all scanners
+    traverse_neighbourhood(0)
+
+    # Now all beacons are in the same dimension space
+    # So we can just see how many unique points we have
+
+    all_beacons = set(map(tuple, itertools.chain.from_iterable(scanners)))
+
+    number_of_beacons = len(all_beacons)
     return f"{number_of_beacons}"
 
 
