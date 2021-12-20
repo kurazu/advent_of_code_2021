@@ -51,7 +51,7 @@ def get_edges(beacons: npt.NDArray[int]) -> Dict[float, Tuple[int, int]]:
 
 def resolve_scanner(
     source_beacons: npt.NDArray[int], target_beacons: npt.NDArray[int]
-) -> npt.NDArray[int]:
+) -> Tuple[npt.NDArray[int], npt.NDArray[int]]:
     # find common edges
     source_edges = get_edges(source_beacons)
     target_edges = get_edges(target_beacons)
@@ -191,12 +191,10 @@ def resolve_scanner(
 
     # Now we can map all points from the target scanner into source scanner's coords
     result: npt.NDArray[int] = target_beacons @ rotation_matrix + translation_matrix
-    return result
+    return result, translation_matrix
 
 
-def main(input: TextIO) -> str:
-    scanners = list(read_beacons(input))
-
+def check_for_repeating_distances(scanners: List[npt.NDArray[int]]) -> None:
     # First we verify that there are no repeating  distances within
     # each scanner's beacons - thanks to this we will be able to identify
     # graph edges in an unique way.
@@ -213,6 +211,8 @@ def main(input: TextIO) -> str:
         logger.info("Scanner %d done", i)
     assert not has_repeating_distances
 
+
+def build_neighbourhood_graph(scanners: List[npt.NDArray[int]]) -> nx.Graph:
     # Then we build a graph of adjacency between scanners.
     # We require a fully conncted clique of size 12 to be common
     # between graphs.
@@ -237,11 +237,18 @@ def main(input: TextIO) -> str:
 
     nx.nx_pydot.to_pydot(neighbourhood_graph).write_png("neighbourhood_graph.png")
 
+    return neighbourhood_graph
+
+
+def traverse_and_resolve_scanners(
+    scanners: List[npt.NDArray[int]], neighbourhood_graph: nx.Graph
+) -> npt.NDArray[int]:
+    scanner_positions = np.zeros((len(scanners), 3), dtype=int)
+
     # We need to start resolving our graphs
     # we consider the first scanner to be canonical
     # we will do a DFS run through the neighbourhood graph, unifiying scanners
     # as we go
-    source_scanner_idx = 0
     unresolved_nodes = set(range(1, len(scanners)))
 
     def traverse_neighbourhood(source_scanner_idx: int) -> None:
@@ -250,7 +257,7 @@ def main(input: TextIO) -> str:
                 continue  # already visited
 
             # resolve and update this scanner
-            resolved_scanner = resolve_scanner(
+            resolved_scanner, scanner_position = resolve_scanner(
                 scanners[source_scanner_idx], scanners[neighbour_scanner_idx]
             )
             # make sure that at least the required 12 points are matching
@@ -263,6 +270,7 @@ def main(input: TextIO) -> str:
             )
 
             scanners[neighbour_scanner_idx] = resolved_scanner
+            scanner_positions[neighbour_scanner_idx] = scanner_position
             unresolved_nodes.remove(neighbour_scanner_idx)
             logger.info("Resolved scanner %d", neighbour_scanner_idx)
 
@@ -271,12 +279,23 @@ def main(input: TextIO) -> str:
     # Resolve all scanners
     traverse_neighbourhood(0)
 
+    return scanner_positions
+
+
+def main(input: TextIO) -> str:
+    scanners = list(read_beacons(input))
+
+    check_for_repeating_distances(scanners)
+
+    neighbourhood_graph = build_neighbourhood_graph(scanners)
+
+    traverse_and_resolve_scanners(scanners, neighbourhood_graph)
     # Now all beacons are in the same dimension space
     # So we can just see how many unique points we have
 
     all_beacons = set(map(tuple, itertools.chain.from_iterable(scanners)))
-
     number_of_beacons = len(all_beacons)
+    logger.info("Unique beacons %d", number_of_beacons)
     return f"{number_of_beacons}"
 
 
