@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict, Iterable, List, TextIO, Tuple
+from typing import TextIO
 
 import numpy as np
 import numpy.typing as npt
+from returns.curry import partial
 
 from ..cli import run_with_file_argument
 from ..io_utils import get_lines, read_empty_line, read_line
@@ -72,21 +73,20 @@ def enhance_image(
     return target_image
 
 
-def main(input: TextIO) -> str:
+def main(input: TextIO, iterations: int) -> str:
     algorithm = get_algorithm(input)
     read_empty_line(input)
     image = read_image(input)
     logger.info("Input image:\n%s", format_image(image))
 
-    image = enhance_image(image, algorithm, 0)
-    logger.info("Enhanced image:\n%s", format_image(image))
-
-    image = enhance_image(image, algorithm, 1)
-    logger.info("Twice enhanced image:\n%s", format_image(image))
+    for iteration in range(iterations):
+        fill_value = 0 if iteration % 2 == 0 else 1
+        image = enhance_image(image, algorithm, fill_value)
+        logger.info("Enhanced image:\n%s", format_image(image))
 
     pixels_lit = np.sum(image)
     return f"{pixels_lit}"
 
 
 if __name__ == "__main__":
-    run_with_file_argument(main)
+    run_with_file_argument(partial(main, iterations=2))
