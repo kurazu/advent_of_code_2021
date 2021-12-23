@@ -45,8 +45,32 @@ class Reactor:
             self._get_cube_slice(self.valid_x_points, self.x_points, x_slice),
         ] = value
 
+    @staticmethod
+    def _get_cube_size(points: List[int], index: int) -> int:
+        start = points[index]
+        stop = points[index + 1]
+        return stop - start
+
+    def get_volume(
+        self, *, z_cube_index: int, y_cube_index: int, x_cube_index: int
+    ) -> int:
+        z_size = self._get_cube_size(self.z_points, z_cube_index)
+        y_size = self._get_cube_size(self.y_points, y_cube_index)
+        x_size = self._get_cube_size(self.x_points, x_cube_index)
+        return x_size * y_size * z_size
+
     def sum(self) -> int:
-        return 0
+        result = 0
+        for z_cube_index in range(len(self.z_points) - 1):
+            for y_cube_index in range(len(self.y_points) - 1):
+                for x_cube_index in range(len(self.x_points) - 1):
+                    if self.cube[z_cube_index, y_cube_index, x_cube_index]:
+                        result += self.get_volume(
+                            z_cube_index=z_cube_index,
+                            y_cube_index=y_cube_index,
+                            x_cube_index=x_cube_index,
+                        )
+        return result
 
 
 def get_reactor(instructions: List[Instruction]) -> Reactor:
@@ -75,16 +99,25 @@ def get_reactor(instructions: List[Instruction]) -> Reactor:
 
 
 def apply_instructions(instructions: List[Instruction], reactor: Reactor) -> None:
+    logger.info("Initial reactor %d", reactor.sum())
     for state, min_x, max_x, min_y, max_y, min_z, max_z in instructions:
         reactor[min_z:max_z, min_y:max_y, min_x:max_x] = state
-
-
-def sum_reactor(reactor: Reactor) -> int:
-    pass
+        logger.info("Reactor now at %d", reactor.sum())
 
 
 def main(input: TextIO) -> str:
     instructions = list(filter_instructions(read_instructions(input), 50))
+    reactor = get_reactor(instructions)
+    apply_instructions(instructions, reactor)
+    return f"{reactor.sum()}"
+
+
+def xmain(input: TextIO) -> str:
+    instructions = [
+        Instruction(state=True, min_x=-2, max_x=3, min_y=1, max_y=1, min_z=1, max_z=1),
+        Instruction(state=False, min_x=0, max_x=6, min_y=1, max_y=1, min_z=1, max_z=1),
+        Instruction(state=True, min_x=4, max_x=8, min_y=1, max_y=1, min_z=1, max_z=1),
+    ]
     reactor = get_reactor(instructions)
     apply_instructions(instructions, reactor)
     return f"{reactor.sum()}"
