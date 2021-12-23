@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import logging
 import re
-from dataclasses import dataclass, field
-from itertools import cycle
-from typing import Iterable, Iterator, NamedTuple, TextIO
+from typing import Iterable, NamedTuple, TextIO
 
 import numpy as np
 import numpy.typing as npt
