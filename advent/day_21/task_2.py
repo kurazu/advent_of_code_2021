@@ -35,7 +35,7 @@ def read_position(input: TextIO) -> int:
     return position
 
 
-MAX_SCORE = 5
+MAX_SCORE = 21
 
 WinningPlayer = Union[Literal[1], Literal[2]]
 Outcome = Tuple[WinningPlayer, int]
@@ -56,25 +56,25 @@ def get_outcomes(
     *, current_player: Player, other_player: Player, universes: int
 ) -> Iterable[Outcome]:
     for outcome, number_of_universes in THREE_ROLLS_POSSIBILITIES.items():
-        universe_branches = universes + number_of_universes
+        universe_branches = universes * number_of_universes
         new_current_player = current_player.move(outcome)
-        logger.debug(
-            "Player %d rolled %d in %d new universes. He moved from %d to %d and his score jumped from %d to %d.",
-            current_player.id,
-            outcome,
-            number_of_universes,
-            current_player.position,
-            new_current_player.position,
-            current_player.score,
-            new_current_player.score,
-        )
+        # logger.debug(
+        #     "Player %d rolled %d in %d new universes. He moved from %d to %d and his score jumped from %d to %d.",
+        #     current_player.id,
+        #     outcome,
+        #     number_of_universes,
+        #     current_player.position,
+        #     new_current_player.position,
+        #     current_player.score,
+        #     new_current_player.score,
+        # )
         if new_current_player.score >= MAX_SCORE:
             # terminal stage
-            logger.debug(
-                "Game ends in %d universes with player %d winning",
-                universe_branches,
-                new_current_player.id,
-            )
+            # logger.debug(
+            #     "Game ends in %d universes with player %d winning",
+            #     universe_branches,
+            #     new_current_player.id,
+            # )
             yield new_current_player.id, universe_branches
         else:
             yield from get_outcomes(
@@ -90,7 +90,7 @@ def main(input: TextIO) -> str:
         get_outcomes(
             current_player=Player(id=1, position=read_position(input), score=0),
             other_player=Player(id=2, position=read_position(input), score=0),
-            universes=0,
+            universes=1,
         )
     ):
         results[winning_player] += number_of_universes
