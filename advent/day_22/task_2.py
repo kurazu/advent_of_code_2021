@@ -16,9 +16,9 @@ class Reactor:
     def __init__(
         self, *, x_points: List[int], y_points: List[int], z_points: List[int]
     ) -> None:
-        self.x_points = x_points + [x_points[-1] + 1]
-        self.y_points = y_points + [y_points[-1] + 1]
-        self.z_points = z_points + [z_points[-1] + 1]
+        self.x_points = x_points
+        self.y_points = y_points
+        self.z_points = z_points
         self.valid_x_points = set(x_points)
         self.valid_y_points = set(y_points)
         self.valid_z_points = set(z_points)
@@ -32,9 +32,9 @@ class Reactor:
         assert start in valid_points
         start_index = points.index(start)
         stop = key.stop
-        assert stop in valid_points
-        stop_index = points.index(stop)
-        return slice(start_index, stop_index + 1)
+        assert stop + 1 in valid_points
+        stop_index = points.index(stop + 1)
+        return slice(start_index, stop_index)
 
     def __setitem__(self, key: Tuple[slice, slice, slice], value: bool) -> None:
         z_slice, y_slice, x_slice = key
@@ -105,22 +105,28 @@ def get_reactor(instructions: List[Instruction]) -> Reactor:
         {
             mark
             for instruction in instructions
-            for mark in [instruction.min_x, instruction.max_x]
+            for mark in [instruction.min_x, instruction.max_x + 1]
         }
     )
     y_points = sorted(
         {
             mark
             for instruction in instructions
-            for mark in [instruction.min_y, instruction.max_y]
+            for mark in [instruction.min_y, instruction.max_y + 1]
         }
     )
     z_points = sorted(
         {
             mark
             for instruction in instructions
-            for mark in [instruction.min_z, instruction.max_z]
+            for mark in [instruction.min_z, instruction.max_z + 1]
         }
+    )
+    logger.debug(
+        "Creating reactor with points z=%s  y=%s x=%s",
+        ",".join(map(str, z_points)),
+        ",".join(map(str, y_points)),
+        ",".join(map(str, x_points)),
     )
     return Reactor(x_points=x_points, y_points=y_points, z_points=z_points)
 

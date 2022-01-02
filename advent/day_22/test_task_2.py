@@ -7,6 +7,84 @@ from .task_1 import Instruction
 from .task_2 import apply_instructions, get_reactor
 
 TASK_2_SAMPLES: List[Tuple[List[Instruction], int]] = [
+    # manual sample 4 (line with break and a skip)
+    (
+        [
+            Instruction(
+                state=True, min_x=-6, max_x=4, min_y=1, max_y=1, min_z=1, max_z=1
+            )
+        ],
+        11,
+    ),
+    # manual sample 4 (line with break and a skip)
+    (
+        [
+            Instruction(
+                state=True, min_x=-6, max_x=4, min_y=1, max_y=1, min_z=1, max_z=1
+            ),
+            Instruction(
+                state=False, min_x=-3, max_x=-1, min_y=1, max_y=1, min_z=1, max_z=1
+            ),
+        ],
+        11 - 3,
+    ),
+    # manual sample 4 (line with break and a skip)
+    (
+        [
+            Instruction(
+                state=True, min_x=-6, max_x=4, min_y=1, max_y=1, min_z=1, max_z=1
+            ),
+            Instruction(
+                state=False, min_x=-3, max_x=-1, min_y=1, max_y=1, min_z=1, max_z=1
+            ),
+            Instruction(
+                state=False, min_x=2, max_x=2, min_y=1, max_y=1, min_z=1, max_z=1
+            ),
+        ],
+        11 - 3 - 1,
+    ),
+    # manual sample 3 (line with a break)
+    (
+        [
+            Instruction(
+                state=True, min_x=-6, max_x=1, min_y=1, max_y=1, min_z=1, max_z=1
+            )
+        ],
+        8,
+    ),
+    # manual sample 3 (line with a break)
+    (
+        [
+            Instruction(
+                state=True, min_x=-6, max_x=1, min_y=1, max_y=1, min_z=1, max_z=1
+            ),
+            Instruction(
+                state=False, min_x=-3, max_x=-2, min_y=1, max_y=1, min_z=1, max_z=1
+            ),
+        ],
+        8 - 2,
+    ),
+    # manual sample 2 (donut)
+    (
+        [
+            Instruction(
+                state=True, min_x=-6, max_x=1, min_y=-2, max_y=2, min_z=1, max_z=1
+            ),
+        ],
+        8 * 5,
+    ),
+    # manual sample 2 (donut)
+    (
+        [
+            Instruction(
+                state=True, min_x=-6, max_x=1, min_y=-2, max_y=2, min_z=1, max_z=1
+            ),
+            Instruction(
+                state=False, min_x=-3, max_x=-2, min_y=-1, max_y=1, min_z=1, max_z=1
+            ),
+        ],
+        8 * 5 - 2 * 3,
+    ),
     # first manual sample
     (
         [
@@ -90,48 +168,6 @@ TASK_2_SAMPLES: List[Tuple[List[Instruction], int]] = [
             ),
         ],
         39,
-    ),
-    # manual sample 3 (line with a break)
-    (
-        [
-            Instruction(
-                state=True, min_x=-6, max_x=1, min_y=1, max_y=1, min_z=1, max_z=1
-            )
-        ],
-        8,
-    ),
-    # manual sample 3 (line with a break)
-    (
-        [
-            Instruction(
-                state=True, min_x=-6, max_x=1, min_y=1, max_y=1, min_z=1, max_z=1
-            ),
-            Instruction(
-                state=True, min_x=-3, max_x=-2, min_y=1, max_y=1, min_z=1, max_z=1
-            ),
-        ],
-        8 - 2,
-    ),
-    # manual sample 2 (donut)
-    (
-        [
-            Instruction(
-                state=True, min_x=-6, max_x=1, min_y=-2, max_y=2, min_z=1, max_z=1
-            ),
-        ],
-        8 * 5,
-    ),
-    # manual sample 2 (donut)
-    (
-        [
-            Instruction(
-                state=True, min_x=-6, max_x=1, min_y=-2, max_y=2, min_z=1, max_z=1
-            ),
-            Instruction(
-                state=False, min_x=-3, max_x=-2, min_y=-1, max_y=1, min_z=1, max_z=1
-            ),
-        ],
-        8 * 5 - 2 * 3,
     ),
     # task 2 sample
     (
