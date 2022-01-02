@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
-from typing import Iterable, Iterator, List, NamedTuple, Set, TextIO, Tuple
+from typing import List, Set, TextIO, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -106,18 +105,7 @@ def apply_instructions(instructions: List[Instruction], reactor: Reactor) -> Non
 
 
 def main(input: TextIO) -> str:
-    instructions = list(filter_instructions(read_instructions(input), 50))
-    reactor = get_reactor(instructions)
-    apply_instructions(instructions, reactor)
-    return f"{reactor.sum()}"
-
-
-def xmain(input: TextIO) -> str:
-    instructions = [
-        Instruction(state=True, min_x=-2, max_x=3, min_y=1, max_y=1, min_z=1, max_z=1),
-        Instruction(state=False, min_x=0, max_x=6, min_y=1, max_y=1, min_z=1, max_z=1),
-        Instruction(state=True, min_x=4, max_x=8, min_y=1, max_y=1, min_z=1, max_z=1),
-    ]
+    instructions = list(read_instructions(input))
     reactor = get_reactor(instructions)
     apply_instructions(instructions, reactor)
     return f"{reactor.sum()}"
