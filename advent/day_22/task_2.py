@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import functools
 import logging
-from typing import List, Set, TextIO, Tuple
+import operator
+from typing import Iterable, List, Set, TextIO, Tuple
 
 import numpy as np
-import numpy.typing as npt
+import tqdm
 
 from ..cli import run_with_file_argument
-from .task_1 import Instruction, filter_instructions, read_instructions
+from .task_1 import Instruction, read_instructions
 
 logger = logging.getLogger(__name__)
 
@@ -59,45 +61,23 @@ class Reactor:
         return x_size * y_size * z_size
 
     def sum(self) -> int:
-        logger.debug("Starting volume calculation")
         result = 0
-        for z_cube_index in range(len(self.z_points) - 1):
-            for y_cube_index in range(len(self.y_points) - 1):
-                for x_cube_index in range(len(self.x_points) - 1):
-                    if self.cube[z_cube_index, y_cube_index, x_cube_index]:
-                        volume = self.get_volume(
-                            z_cube_index=z_cube_index,
-                            y_cube_index=y_cube_index,
-                            x_cube_index=x_cube_index,
-                        )
-                        min_z = self.z_points[z_cube_index]
-                        max_z = self.z_points[z_cube_index + 1]
-                        min_y = self.y_points[y_cube_index]
-                        max_y = self.y_points[y_cube_index + 1]
-                        min_x = self.x_points[x_cube_index]
-                        max_x = self.x_points[x_cube_index + 1]
-                        z_size = self._get_cube_size(self.z_points, z_cube_index)
-                        y_size = self._get_cube_size(self.y_points, y_cube_index)
-                        x_size = self._get_cube_size(self.x_points, x_cube_index)
-                        logger.debug(
-                            "Rector cube (z=%d, y=%d, x=%d) [z=%d..%d, y=%d..%d, x=%d..%d] (z=%d x y=%d x x=%d) lit, volume %d",
-                            z_cube_index,
-                            y_cube_index,
-                            x_cube_index,
-                            min_z,
-                            max_z - 1,
-                            min_y,
-                            max_y - 1,
-                            min_x,
-                            max_x - 1,
-                            z_size,
-                            y_size,
-                            x_size,
-                            volume,
-                        )
-                        result += volume
-        logger.debug("Final volume %d", result)
+        with tqdm.tqdm(total=len(self)) as pbar:
+            for z_cube_index in range(len(self.z_points) - 1):
+                for y_cube_index in range(len(self.y_points) - 1):
+                    for x_cube_index in range(len(self.x_points) - 1):
+                        if self.cube[z_cube_index, y_cube_index, x_cube_index]:
+                            result += self.get_volume(
+                                z_cube_index=z_cube_index,
+                                y_cube_index=y_cube_index,
+                                x_cube_index=x_cube_index,
+                            )
+                        pbar.update(1)
         return result
+
+    def __len__(self) -> int:
+        shape: Iterable[int] = self.cube.shape
+        return functools.reduce(operator.mul, shape)
 
 
 def get_reactor(instructions: List[Instruction]) -> Reactor:
@@ -122,30 +102,28 @@ def get_reactor(instructions: List[Instruction]) -> Reactor:
             for mark in [instruction.min_z, instruction.max_z + 1]
         }
     )
-    logger.debug(
-        "Creating reactor with points z=%s  y=%s x=%s",
-        ",".join(map(str, z_points)),
-        ",".join(map(str, y_points)),
-        ",".join(map(str, x_points)),
-    )
-    return Reactor(x_points=x_points, y_points=y_points, z_points=z_points)
+    reactor = Reactor(x_points=x_points, y_points=y_points, z_points=z_points)
+    logger.info("Created reactor of size %s", f"{len(reactor):,}")
+    return reactor
 
 
 def apply_instructions(instructions: List[Instruction], reactor: Reactor) -> None:
-    logger.info("Initial reactor %d", reactor.sum())
     for instruction in instructions:
         reactor[
             instruction.min_z : instruction.max_z,
             instruction.min_y : instruction.max_y,
             instruction.min_x : instruction.max_x,
         ] = instruction.state
-        logger.info("Reactor now at %d", reactor.sum())
 
 
 def main(input: TextIO) -> str:
+    logger.info("Reading instructions")
     instructions = list(read_instructions(input))
+    logger.info("Creating reactor")
     reactor = get_reactor(instructions)
+    logger.info("Applying instructions")
     apply_instructions(instructions, reactor)
+    logger.info("Calculating cubes lit")
     return f"{reactor.sum()}"
 
 

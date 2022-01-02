@@ -330,6 +330,9 @@ day_22_task_2_sample:
 day_22_task_2_tiny_sample:
 	poetry run python -m advent.day_22.task_2 data/day_22/tiny_sample.txt
 
+day_22_task_2_big_sample:
+	poetry run python -m advent.day_22.task_2 data/day_22/big_sample.txt
+
 day_22_task_2_input:
 	poetry run python -m advent.day_22.task_2 data/day_22/input.txt.gz
 

@@ -802,7 +802,5 @@ def test_task_2(
     caplog.set_level(logging.DEBUG)
     reactor = get_reactor(instructions)
     apply_instructions(instructions, reactor)
-    if expected_cubes_lit == 34:
-        breakpoint()
     actual = reactor.sum()
     assert actual == expected_cubes_lit
