@@ -1,4 +1,5 @@
-from typing import List, Tuple
+import logging
+from typing import Any, List, Tuple
 
 import pytest
 
@@ -6,6 +7,7 @@ from .task_1 import Instruction
 from .task_2 import apply_instructions, get_reactor
 
 TASK_2_SAMPLES: List[Tuple[List[Instruction], int]] = [
+    # first manual sample
     (
         [
             Instruction(
@@ -20,6 +22,7 @@ TASK_2_SAMPLES: List[Tuple[List[Instruction], int]] = [
         ],
         7,
     ),
+    # first manual sample scaled to more dimensions
     (
         [
             Instruction(
@@ -34,6 +37,7 @@ TASK_2_SAMPLES: List[Tuple[List[Instruction], int]] = [
         ],
         42,
     ),
+    # task 1 sample
     (
         [
             Instruction(
@@ -42,6 +46,7 @@ TASK_2_SAMPLES: List[Tuple[List[Instruction], int]] = [
         ],
         27,
     ),
+    # task 1 sample
     (
         [
             Instruction(
@@ -53,6 +58,7 @@ TASK_2_SAMPLES: List[Tuple[List[Instruction], int]] = [
         ],
         27 + 19,
     ),
+    # task 1 sample
     (
         [
             Instruction(
@@ -67,6 +73,7 @@ TASK_2_SAMPLES: List[Tuple[List[Instruction], int]] = [
         ],
         27 + 19 - 8,
     ),
+    # task 1 sample
     (
         [
             Instruction(
@@ -84,6 +91,28 @@ TASK_2_SAMPLES: List[Tuple[List[Instruction], int]] = [
         ],
         39,
     ),
+    # manual sample 2 (donut)
+    (
+        [
+            Instruction(
+                state=True, min_x=-6, max_x=1, min_y=-2, max_y=2, min_z=1, max_z=1
+            ),
+        ],
+        8 * 5,
+    ),
+    # manual sample 2 (donut)
+    (
+        [
+            Instruction(
+                state=True, min_x=-6, max_x=1, min_y=-2, max_y=2, min_z=1, max_z=1
+            ),
+            Instruction(
+                state=False, min_x=-3, max_x=-2, min_y=-1, max_y=1, min_z=1, max_z=1
+            ),
+        ],
+        8 * 5 - 2 * 3,
+    ),
+    # task 2 sample
     (
         [
             Instruction(
@@ -710,8 +739,13 @@ TASK_2_SAMPLES: List[Tuple[List[Instruction], int]] = [
 
 
 @pytest.mark.parametrize("instructions,expected_cubes_lit", TASK_2_SAMPLES)
-def test_task_2(instructions: List[Instruction], expected_cubes_lit: int) -> None:
+def test_task_2(
+    instructions: List[Instruction], expected_cubes_lit: int, caplog: Any
+) -> None:
+    caplog.set_level(logging.DEBUG)
     reactor = get_reactor(instructions)
     apply_instructions(instructions, reactor)
+    if expected_cubes_lit == 34:
+        breakpoint()
     actual = reactor.sum()
     assert actual == expected_cubes_lit

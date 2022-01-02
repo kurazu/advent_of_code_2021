@@ -59,16 +59,32 @@ class Reactor:
         return x_size * y_size * z_size
 
     def sum(self) -> int:
+        logger.debug("Starting volume calculation")
         result = 0
         for z_cube_index in range(len(self.z_points) - 1):
             for y_cube_index in range(len(self.y_points) - 1):
                 for x_cube_index in range(len(self.x_points) - 1):
                     if self.cube[z_cube_index, y_cube_index, x_cube_index]:
-                        result += self.get_volume(
+                        volume = self.get_volume(
                             z_cube_index=z_cube_index,
                             y_cube_index=y_cube_index,
                             x_cube_index=x_cube_index,
                         )
+                        z_size = self._get_cube_size(self.z_points, z_cube_index)
+                        y_size = self._get_cube_size(self.y_points, y_cube_index)
+                        x_size = self._get_cube_size(self.x_points, x_cube_index)
+                        logger.debug(
+                            "Rector cube %d,%d,%d (%d x %d x %d) lit, volume %d",
+                            z_cube_index,
+                            y_cube_index,
+                            x_cube_index,
+                            z_size,
+                            y_size,
+                            x_size,
+                            volume,
+                        )
+                        result += volume
+        logger.debug("Final volume %d", result)
         return result
 
 
@@ -99,8 +115,12 @@ def get_reactor(instructions: List[Instruction]) -> Reactor:
 
 def apply_instructions(instructions: List[Instruction], reactor: Reactor) -> None:
     logger.info("Initial reactor %d", reactor.sum())
-    for state, min_x, max_x, min_y, max_y, min_z, max_z in instructions:
-        reactor[min_z:max_z, min_y:max_y, min_x:max_x] = state
+    for instruction in instructions:
+        reactor[
+            instruction.min_z : instruction.max_z,
+            instruction.min_y : instruction.max_y,
+            instruction.min_x : instruction.max_x,
+        ] = instruction.state
         logger.info("Reactor now at %d", reactor.sum())
 
 

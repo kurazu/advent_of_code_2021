@@ -334,4 +334,4 @@ day_22_task_2_input:
 	poetry run python -m advent.day_22.task_2 data/day_22/input.txt.gz
 
 day_22_task_2_test:
-	poetry run pytest -s -vv advent/day_22/test_task_2.py
+	poetry run pytest -s -vv -x advent/day_22/test_task_2.py

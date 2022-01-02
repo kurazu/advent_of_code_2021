@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Iterable, NamedTuple, TextIO
+from dataclasses import dataclass
+from typing import Iterable, TextIO
 
 import numpy as np
 import numpy.typing as npt
@@ -21,7 +22,8 @@ PATTERN = re.compile(
 )
 
 
-class Instruction(NamedTuple):
+@dataclass
+class Instruction:
     state: bool
     min_x: int
     max_x: int
@@ -29,6 +31,11 @@ class Instruction(NamedTuple):
     max_y: int
     min_z: int
     max_z: int
+
+    def __post_init__(self) -> None:
+        assert self.min_x <= self.max_x
+        assert self.min_y <= self.max_y
+        assert self.min_z <= self.max_z
 
 
 def read_instruction(line: str) -> Instruction:
@@ -73,12 +80,12 @@ def get_reactor(max_axis: int) -> npt.NDArray[bool]:
 def apply_instructions(
     instructions: Iterable[Instruction], reactor: npt.NDArray[bool], max_axis: int
 ) -> None:
-    for state, min_x, max_x, min_y, max_y, min_z, max_z in instructions:
+    for instruction in instructions:
         reactor[
-            max_axis + min_z : max_axis + max_z + 1,
-            max_axis + min_y : max_axis + max_y + 1,
-            max_axis + min_x : max_axis + max_x + 1,
-        ] = state
+            max_axis + instruction.min_z : max_axis + instruction.max_z + 1,
+            max_axis + instruction.min_y : max_axis + instruction.max_y + 1,
+            max_axis + instruction.min_x : max_axis + instruction.max_x + 1,
+        ] = instruction.state
 
 
 def main(input: TextIO) -> str:
