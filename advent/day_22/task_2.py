@@ -70,14 +70,26 @@ class Reactor:
                             y_cube_index=y_cube_index,
                             x_cube_index=x_cube_index,
                         )
+                        min_z = self.z_points[z_cube_index]
+                        max_z = self.z_points[z_cube_index + 1]
+                        min_y = self.y_points[y_cube_index]
+                        max_y = self.y_points[y_cube_index + 1]
+                        min_x = self.x_points[x_cube_index]
+                        max_x = self.x_points[x_cube_index + 1]
                         z_size = self._get_cube_size(self.z_points, z_cube_index)
                         y_size = self._get_cube_size(self.y_points, y_cube_index)
                         x_size = self._get_cube_size(self.x_points, x_cube_index)
                         logger.debug(
-                            "Rector cube %d,%d,%d (%d x %d x %d) lit, volume %d",
+                            "Rector cube (z=%d, y=%d, x=%d) [z=%d..%d, y=%d..%d, x=%d..%d] (z=%d x y=%d x x=%d) lit, volume %d",
                             z_cube_index,
                             y_cube_index,
                             x_cube_index,
+                            min_z,
+                            max_z - 1,
+                            min_y,
+                            max_y - 1,
+                            min_x,
+                            max_x - 1,
                             z_size,
                             y_size,
                             x_size,

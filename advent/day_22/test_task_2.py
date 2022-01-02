@@ -91,6 +91,27 @@ TASK_2_SAMPLES: List[Tuple[List[Instruction], int]] = [
         ],
         39,
     ),
+    # manual sample 3 (line with a break)
+    (
+        [
+            Instruction(
+                state=True, min_x=-6, max_x=1, min_y=1, max_y=1, min_z=1, max_z=1
+            )
+        ],
+        8,
+    ),
+    # manual sample 3 (line with a break)
+    (
+        [
+            Instruction(
+                state=True, min_x=-6, max_x=1, min_y=1, max_y=1, min_z=1, max_z=1
+            ),
+            Instruction(
+                state=True, min_x=-3, max_x=-2, min_y=1, max_y=1, min_z=1, max_z=1
+            ),
+        ],
+        8 - 2,
+    ),
     # manual sample 2 (donut)
     (
         [
