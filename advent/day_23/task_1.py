@@ -9,6 +9,8 @@ from enum import Enum
 from typing import (DefaultDict, Dict, Iterable, List, NamedTuple, Optional,
                     Set, TextIO, Tuple)
 
+from returns.curry import partial
+
 from ..cli import run_with_file_argument
 
 logger = logging.getLogger(__name__)
@@ -146,15 +148,98 @@ DISTANCES: Dict[Tuple[Field, Field], int] = {
     (Field.AH, Field.DL): 9,
     (Field.AL, Field.DL): 10,
     # From B to parking
+    (Field.BH, Field.LF): 5,
+    (Field.BL, Field.LF): 6,
+    (Field.BH, Field.LN): 4,
+    (Field.BL, Field.LN): 5,
+    (Field.BH, Field.AB): 2,
+    (Field.BL, Field.AB): 3,
+    (Field.BH, Field.BC): 2,
+    (Field.BL, Field.BC): 3,
+    (Field.BH, Field.CD): 4,
+    (Field.BL, Field.CD): 5,
+    (Field.BH, Field.RN): 6,
+    (Field.BL, Field.RN): 7,
+    (Field.BH, Field.RF): 7,
+    (Field.BL, Field.RF): 9,
     # From B to rooms
+    (Field.BH, Field.AH): 4,
+    (Field.BL, Field.AH): 5,
+    (Field.BH, Field.AL): 5,
+    (Field.BL, Field.AL): 6,
+    (Field.BH, Field.CH): 4,
+    (Field.BL, Field.CH): 5,
+    (Field.BH, Field.CL): 5,
+    (Field.BL, Field.CL): 6,
+    (Field.BH, Field.DH): 6,
+    (Field.BL, Field.DH): 7,
+    (Field.BH, Field.DL): 7,
+    (Field.BL, Field.DL): 8,
     # From C to parking
+    (Field.CH, Field.LF): 7,
+    (Field.CL, Field.LF): 8,
+    (Field.CH, Field.LN): 6,
+    (Field.CL, Field.LN): 7,
+    (Field.CH, Field.AB): 4,
+    (Field.CL, Field.AB): 5,
+    (Field.CH, Field.BC): 2,
+    (Field.CL, Field.BC): 3,
+    (Field.CH, Field.CD): 2,
+    (Field.CL, Field.CD): 3,
+    (Field.CH, Field.RN): 4,
+    (Field.CL, Field.RN): 5,
+    (Field.CH, Field.RF): 5,
+    (Field.CL, Field.RF): 6,
     # From C to rooms
+    (Field.CH, Field.AH): 6,
+    (Field.CL, Field.AH): 7,
+    (Field.CH, Field.AL): 7,
+    (Field.CL, Field.AL): 8,
+    (Field.CH, Field.BH): 4,
+    (Field.CL, Field.BH): 5,
+    (Field.CH, Field.BL): 5,
+    (Field.CL, Field.BL): 6,
+    (Field.CH, Field.DH): 4,
+    (Field.CL, Field.DH): 5,
+    (Field.CH, Field.DL): 5,
+    (Field.CL, Field.DL): 6,
     # From D to parking
+    (Field.DH, Field.LF): 9,
+    (Field.DL, Field.LF): 10,
+    (Field.DH, Field.LN): 8,
+    (Field.DL, Field.LN): 9,
+    (Field.DH, Field.AB): 6,
+    (Field.DL, Field.AB): 7,
+    (Field.DH, Field.BC): 4,
+    (Field.DL, Field.BC): 5,
+    (Field.DH, Field.CD): 2,
+    (Field.DL, Field.CD): 3,
+    (Field.DH, Field.RN): 2,
+    (Field.DL, Field.RN): 3,
+    (Field.DH, Field.RF): 3,
+    (Field.DL, Field.RF): 4,
     # From D to rooms
+    (Field.DH, Field.AH): 8,
+    (Field.DL, Field.AH): 9,
+    (Field.DH, Field.AL): 9,
+    (Field.DL, Field.AL): 10,
+    (Field.DH, Field.BH): 6,
+    (Field.DL, Field.BH): 7,
+    (Field.DH, Field.BL): 7,
+    (Field.DL, Field.BL): 8,
+    (Field.DH, Field.CH): 4,
+    (Field.DL, Field.CH): 5,
+    (Field.DH, Field.CL): 5,
+    (Field.DL, Field.CL): 6,
 }
 for (from_field, to_field), cost in DISTANCES.items():
-    assert (to_field, from_field) not in DISTANCES
-    DISTANCES[to_field, from_field] = cost
+    key = to_field, from_field
+    if key in DISTANCES:
+        assert DISTANCES[key] == cost
+    else:
+        DISTANCES[key] = cost
+
+
 MOVE_COSTS: Dict[Amphipod, int] = {
     Amphipod.AMBER: 1,
     Amphipod.BRONZE: 10,
@@ -176,43 +261,164 @@ def move(board: Board, from_field: Field, to_field: Field) -> Tuple[Board, int]:
     return new_board, distance * cost
 
 
-def get_possible_lf_moves(board: Board) -> Iterable[Tuple[Board, int]]:
-    amphipod = board[Field.LF]
-    if amphipod is None:
-        return
+def get_possible_a_moves(
+    source_field: Field, board: Board
+) -> Iterable[Tuple[Board, int]]:
+    amphipod = board[source_field]
+    assert amphipod is not None
+
     if amphipod == Amphipod.AMBER:
         if board[Field.AH] is None and board[Field.AL] is None:
-            yield board.move(from_field=Field.LF, to_field=Field.AL), 4
-    elif amphipod == Amphipod.BRONZE:
-        pass
-    elif amphipod == Amphipod.COPPER:
-        pass
-    else:
-        assert amphipod == Amphipod.DESERT
-        pass
+            yield move(board, from_field=source_field, to_field=Field.AL)
+        elif board[Field.AL] == Amphipod.AMBER and board[Field.AH] is None:
+            yield move(board, from_field=source_field, to_field=Field.AH)
 
 
-def get_possible_ln_moves(board: Board) -> Iterable[Tuple[Board, int]]:
-    pass
+def get_possible_b_moves(
+    source_field: Field, board: Board
+) -> Iterable[Tuple[Board, int]]:
+    amphipod = board[source_field]
+    assert amphipod is not None
+
+    if amphipod == Amphipod.BRONZE:
+        if board[Field.BH] is None and board[Field.BL] is None:
+            yield move(board, from_field=source_field, to_field=Field.BL)
+        elif board[Field.BL] == Amphipod.BRONZE and board[Field.BH] is None:
+            yield move(board, from_field=source_field, to_field=Field.BH)
 
 
-def get_possible_ab_moves(board: Board) -> Iterable[Tuple[Board, int]]:
-    pass
+def get_possible_c_moves(
+    source_field: Field, board: Board
+) -> Iterable[Tuple[Board, int]]:
+    amphipod = board[source_field]
+    assert amphipod is not None
+
+    if amphipod == Amphipod.COPPER:
+        if board[Field.CH] is None and board[Field.CL] is None:
+            yield move(board, from_field=source_field, to_field=Field.CL)
+        elif board[Field.CL] == Amphipod.COPPER and board[Field.CH] is None:
+            yield move(board, from_field=source_field, to_field=Field.CH)
 
 
-def get_possible_bc_moves(board: Board) -> Iterable[Tuple[Board, int]]:
-    pass
+def get_possible_d_moves(
+    source_field: Field, board: Board
+) -> Iterable[Tuple[Board, int]]:
+    amphipod = board[source_field]
+    assert amphipod is not None
+
+    if amphipod == Amphipod.DESERT:
+        if board[Field.DH] is None and board[Field.DL] is None:
+            yield move(board, from_field=source_field, to_field=Field.DL)
+        elif board[Field.DL] == Amphipod.DESERT and board[Field.DH] is None:
+            yield move(board, from_field=source_field, to_field=Field.DH)
 
 
-def get_possible_cd_moves(board: Board) -> Iterable[Tuple[Board, int]]:
-    pass
+def get_possible_lx_moves(
+    source_field: Field, board: Board
+) -> Iterable[Tuple[Board, int]]:
+    amphipod = board[source_field]
+    if amphipod is None:
+        return  # There is not amphipod here
+
+    yield from get_possible_a_moves(source_field, board)
+
+    if board[Field.AB] is not None:
+        return  # Blocked
+
+    yield from get_possible_b_moves(source_field, board)
+
+    if board[Field.BC] is not None:
+        return  # blocked
+
+    yield from get_possible_c_moves(source_field, board)
+
+    if board[Field.CD] is not None:
+        return  # blocked
+
+    yield from get_possible_d_moves(source_field, board)
 
 
-def get_possible_rn_moves(board: Board) -> Iterable[Tuple[Board, int]]:
-    pass
+def get_possible_lf_moves(board: Board) -> Iterable[Tuple[Board, int]]:
+    if board[Field.LN] is not None:
+        return  # blocked
+    yield from get_possible_lx_moves(source_field=Field.LF, board=board)
+
+
+get_possible_ln_moves = partial(get_possible_lx_moves, source_field=Field.LN)
+
+
+def get_possible_rx_moves(
+    source_field: Field, board: Board
+) -> Iterable[Tuple[Board, int]]:
+    amphipod = board[source_field]
+    if amphipod is None:
+        return  # There is not amphipod here
+
+    yield from get_possible_d_moves(source_field, board)
+
+    if board[Field.CD] is not None:
+        return  # blocked
+
+    yield from get_possible_c_moves(source_field, board)
+
+    if board[Field.BC] is not None:
+        return  # blocked
+
+    yield from get_possible_b_moves(source_field, board)
+
+    if board[Field.AB] is not None:
+        return  # Blocked
+
+    yield from get_possible_a_moves(source_field, board)
 
 
 def get_possible_rf_moves(board: Board) -> Iterable[Tuple[Board, int]]:
+    if board[Field.RN] is not None:
+        return  # Blocked
+    yield from get_possible_rx_moves(source_field=Field.RF, board=board)
+
+
+get_possible_rn_moves = partial(get_possible_rx_moves, source_field=Field.RN)
+
+
+def get_possible_ab_moves(board: Board) -> Iterable[Tuple[Board, int]]:
+    source_field = Field.AB
+    amphipod = board[source_field]
+    if amphipod is None:
+        return  # There is not amphipod here
+
+    yield from get_possible_a_moves(source_field, board)
+    yield from get_possible_b_moves(source_field, board)
+
+    if board[Field.BC] is not None:
+        return  # blocked
+
+    yield from get_possible_c_moves(source_field, board)
+
+    if board[Field.CD] is not None:
+        return  # blocked
+
+    yield from get_possible_d_moves(source_field, board)
+
+
+def get_possible_bc_moves(board: Board) -> Iterable[Tuple[Board, int]]:
+    source_field = Field.BC
+    amphipod = board[source_field]
+    if amphipod is None:
+        return  # There is not amphipod here
+
+    # NO EASY RETURN
+    yield from get_possible_b_moves(source_field, board)
+    yield from get_possible_c_moves(source_field, board)
+
+    if board[Field.CD] is None:
+        yield from get_possible_d_moves(source_field, board)
+
+    if board[Field.AB] is None:
+        yield from get_possible_a_moves(source_field, board)
+
+
+def get_possible_cd_moves(board: Board) -> Iterable[Tuple[Board, int]]:
     pass
 
 
