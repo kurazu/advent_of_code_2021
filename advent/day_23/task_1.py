@@ -638,7 +638,11 @@ def dfs(starting_board: Board) -> Tuple[List[Move], int]:
         boards_seen.add(current_board.id())  # might be too memory intensive
         if current_board == TARGET_BOARD:
             # Terminal state
-            best_energy = min(best_energy, stack_energy)
+            if stack_energy < best_energy:
+                logger.debug("Found best terminal state with energy %d", stack_energy)
+                best_energy = stack_energy
+            else:
+                logger.debug("Garbage terminal state %d", stack_energy)
             return moves, stack_energy
         else:
             possibilities: List[Tuple[Move, int]] = []
@@ -681,8 +685,16 @@ def dfs(starting_board: Board) -> Tuple[List[Move], int]:
 def main(input: TextIO) -> str:
     starting_board = read_board(input)
     moves, energy = dfs(starting_board)
-    for from_field, to_field in moves:
-        logger.info("Step: %s -> %s", from_field.value, to_field.value)
+    logger.info("Best solution with %d moves and energy %d", len(moves), energy)
+    board = starting_board
+    for best_move in moves:
+        from_field, to_field = best_move
+        amphipod = board[from_field]
+        assert amphipod is not None
+        logger.info(
+            "Step: %s %s -> %s", amphipod.name, from_field.value, to_field.value
+        )
+        board = move(board, best_move)
     return f"{energy}"
 
 
