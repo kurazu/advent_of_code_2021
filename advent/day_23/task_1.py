@@ -124,126 +124,133 @@ class Move(NamedTuple):
     to_field: Field
 
 
-DISTANCES: Dict[Move, int] = {
-    # From A to parking
-    Move(Field.AH, Field.LF): 3,
-    Move(Field.AL, Field.LF): 4,
-    Move(Field.AH, Field.LN): 2,
-    Move(Field.AL, Field.LN): 3,
-    Move(Field.AH, Field.AB): 2,
-    Move(Field.AL, Field.AB): 3,
-    Move(Field.AH, Field.BC): 4,
-    Move(Field.AL, Field.BC): 5,
-    Move(Field.AH, Field.CD): 6,
-    Move(Field.AL, Field.CD): 7,
-    Move(Field.AH, Field.RN): 8,
-    Move(Field.AL, Field.RN): 9,
-    Move(Field.AH, Field.RF): 9,
-    Move(Field.AL, Field.RF): 10,
-    # From A to rooms
-    Move(Field.AH, Field.BH): 4,
-    Move(Field.AL, Field.BH): 5,
-    Move(Field.AH, Field.BL): 5,
-    Move(Field.AL, Field.BL): 6,
-    Move(Field.AH, Field.CH): 6,
-    Move(Field.AL, Field.CH): 7,
-    Move(Field.AH, Field.CL): 7,
-    Move(Field.AL, Field.CL): 8,
-    Move(Field.AH, Field.DH): 8,
-    Move(Field.AL, Field.DH): 9,
-    Move(Field.AH, Field.DL): 9,
-    Move(Field.AL, Field.DL): 10,
-    # From B to parking
-    Move(Field.BH, Field.LF): 5,
-    Move(Field.BL, Field.LF): 6,
-    Move(Field.BH, Field.LN): 4,
-    Move(Field.BL, Field.LN): 5,
-    Move(Field.BH, Field.AB): 2,
-    Move(Field.BL, Field.AB): 3,
-    Move(Field.BH, Field.BC): 2,
-    Move(Field.BL, Field.BC): 3,
-    Move(Field.BH, Field.CD): 4,
-    Move(Field.BL, Field.CD): 5,
-    Move(Field.BH, Field.RN): 6,
-    Move(Field.BL, Field.RN): 7,
-    Move(Field.BH, Field.RF): 7,
-    Move(Field.BL, Field.RF): 9,
-    # From B to rooms
-    Move(Field.BH, Field.AH): 4,
-    Move(Field.BL, Field.AH): 5,
-    Move(Field.BH, Field.AL): 5,
-    Move(Field.BL, Field.AL): 6,
-    Move(Field.BH, Field.CH): 4,
-    Move(Field.BL, Field.CH): 5,
-    Move(Field.BH, Field.CL): 5,
-    Move(Field.BL, Field.CL): 6,
-    Move(Field.BH, Field.DH): 6,
-    Move(Field.BL, Field.DH): 7,
-    Move(Field.BH, Field.DL): 7,
-    Move(Field.BL, Field.DL): 8,
-    # From C to parking
-    Move(Field.CH, Field.LF): 7,
-    Move(Field.CL, Field.LF): 8,
-    Move(Field.CH, Field.LN): 6,
-    Move(Field.CL, Field.LN): 7,
-    Move(Field.CH, Field.AB): 4,
-    Move(Field.CL, Field.AB): 5,
-    Move(Field.CH, Field.BC): 2,
-    Move(Field.CL, Field.BC): 3,
-    Move(Field.CH, Field.CD): 2,
-    Move(Field.CL, Field.CD): 3,
-    Move(Field.CH, Field.RN): 4,
-    Move(Field.CL, Field.RN): 5,
-    Move(Field.CH, Field.RF): 5,
-    Move(Field.CL, Field.RF): 6,
-    # From C to rooms
-    Move(Field.CH, Field.AH): 6,
-    Move(Field.CL, Field.AH): 7,
-    Move(Field.CH, Field.AL): 7,
-    Move(Field.CL, Field.AL): 8,
-    Move(Field.CH, Field.BH): 4,
-    Move(Field.CL, Field.BH): 5,
-    Move(Field.CH, Field.BL): 5,
-    Move(Field.CL, Field.BL): 6,
-    Move(Field.CH, Field.DH): 4,
-    Move(Field.CL, Field.DH): 5,
-    Move(Field.CH, Field.DL): 5,
-    Move(Field.CL, Field.DL): 6,
-    # From D to parking
-    Move(Field.DH, Field.LF): 9,
-    Move(Field.DL, Field.LF): 10,
-    Move(Field.DH, Field.LN): 8,
-    Move(Field.DL, Field.LN): 9,
-    Move(Field.DH, Field.AB): 6,
-    Move(Field.DL, Field.AB): 7,
-    Move(Field.DH, Field.BC): 4,
-    Move(Field.DL, Field.BC): 5,
-    Move(Field.DH, Field.CD): 2,
-    Move(Field.DL, Field.CD): 3,
-    Move(Field.DH, Field.RN): 2,
-    Move(Field.DL, Field.RN): 3,
-    Move(Field.DH, Field.RF): 3,
-    Move(Field.DL, Field.RF): 4,
-    # From D to rooms
-    Move(Field.DH, Field.AH): 8,
-    Move(Field.DL, Field.AH): 9,
-    Move(Field.DH, Field.AL): 9,
-    Move(Field.DL, Field.AL): 10,
-    Move(Field.DH, Field.BH): 6,
-    Move(Field.DL, Field.BH): 7,
-    Move(Field.DH, Field.BL): 7,
-    Move(Field.DL, Field.BL): 8,
-    Move(Field.DH, Field.CH): 4,
-    Move(Field.DL, Field.CH): 5,
-    Move(Field.DH, Field.CL): 5,
-    Move(Field.DL, Field.CL): 6,
-}
-for (from_field, to_field), cost in DISTANCES.items():
-    key = Move(to_field, from_field)
-    if key in DISTANCES:
-        assert DISTANCES[key] == cost
-    else:
-        DISTANCES[key] = cost
+def get_distances() -> Dict[Move, int]:
+    distances = {
+        # From A to parking
+        Move(Field.AH, Field.LF): 3,
+        Move(Field.AL, Field.LF): 4,
+        Move(Field.AH, Field.LN): 2,
+        Move(Field.AL, Field.LN): 3,
+        Move(Field.AH, Field.AB): 2,
+        Move(Field.AL, Field.AB): 3,
+        Move(Field.AH, Field.BC): 4,
+        Move(Field.AL, Field.BC): 5,
+        Move(Field.AH, Field.CD): 6,
+        Move(Field.AL, Field.CD): 7,
+        Move(Field.AH, Field.RN): 8,
+        Move(Field.AL, Field.RN): 9,
+        Move(Field.AH, Field.RF): 9,
+        Move(Field.AL, Field.RF): 10,
+        # From A to rooms
+        Move(Field.AH, Field.BH): 4,
+        Move(Field.AL, Field.BH): 5,
+        Move(Field.AH, Field.BL): 5,
+        Move(Field.AL, Field.BL): 6,
+        Move(Field.AH, Field.CH): 6,
+        Move(Field.AL, Field.CH): 7,
+        Move(Field.AH, Field.CL): 7,
+        Move(Field.AL, Field.CL): 8,
+        Move(Field.AH, Field.DH): 8,
+        Move(Field.AL, Field.DH): 9,
+        Move(Field.AH, Field.DL): 9,
+        Move(Field.AL, Field.DL): 10,
+        # From B to parking
+        Move(Field.BH, Field.LF): 5,
+        Move(Field.BL, Field.LF): 6,
+        Move(Field.BH, Field.LN): 4,
+        Move(Field.BL, Field.LN): 5,
+        Move(Field.BH, Field.AB): 2,
+        Move(Field.BL, Field.AB): 3,
+        Move(Field.BH, Field.BC): 2,
+        Move(Field.BL, Field.BC): 3,
+        Move(Field.BH, Field.CD): 4,
+        Move(Field.BL, Field.CD): 5,
+        Move(Field.BH, Field.RN): 6,
+        Move(Field.BL, Field.RN): 7,
+        Move(Field.BH, Field.RF): 7,
+        Move(Field.BL, Field.RF): 9,
+        # From B to rooms
+        Move(Field.BH, Field.AH): 4,
+        Move(Field.BL, Field.AH): 5,
+        Move(Field.BH, Field.AL): 5,
+        Move(Field.BL, Field.AL): 6,
+        Move(Field.BH, Field.CH): 4,
+        Move(Field.BL, Field.CH): 5,
+        Move(Field.BH, Field.CL): 5,
+        Move(Field.BL, Field.CL): 6,
+        Move(Field.BH, Field.DH): 6,
+        Move(Field.BL, Field.DH): 7,
+        Move(Field.BH, Field.DL): 7,
+        Move(Field.BL, Field.DL): 8,
+        # From C to parking
+        Move(Field.CH, Field.LF): 7,
+        Move(Field.CL, Field.LF): 8,
+        Move(Field.CH, Field.LN): 6,
+        Move(Field.CL, Field.LN): 7,
+        Move(Field.CH, Field.AB): 4,
+        Move(Field.CL, Field.AB): 5,
+        Move(Field.CH, Field.BC): 2,
+        Move(Field.CL, Field.BC): 3,
+        Move(Field.CH, Field.CD): 2,
+        Move(Field.CL, Field.CD): 3,
+        Move(Field.CH, Field.RN): 4,
+        Move(Field.CL, Field.RN): 5,
+        Move(Field.CH, Field.RF): 5,
+        Move(Field.CL, Field.RF): 6,
+        # From C to rooms
+        Move(Field.CH, Field.AH): 6,
+        Move(Field.CL, Field.AH): 7,
+        Move(Field.CH, Field.AL): 7,
+        Move(Field.CL, Field.AL): 8,
+        Move(Field.CH, Field.BH): 4,
+        Move(Field.CL, Field.BH): 5,
+        Move(Field.CH, Field.BL): 5,
+        Move(Field.CL, Field.BL): 6,
+        Move(Field.CH, Field.DH): 4,
+        Move(Field.CL, Field.DH): 5,
+        Move(Field.CH, Field.DL): 5,
+        Move(Field.CL, Field.DL): 6,
+        # From D to parking
+        Move(Field.DH, Field.LF): 9,
+        Move(Field.DL, Field.LF): 10,
+        Move(Field.DH, Field.LN): 8,
+        Move(Field.DL, Field.LN): 9,
+        Move(Field.DH, Field.AB): 6,
+        Move(Field.DL, Field.AB): 7,
+        Move(Field.DH, Field.BC): 4,
+        Move(Field.DL, Field.BC): 5,
+        Move(Field.DH, Field.CD): 2,
+        Move(Field.DL, Field.CD): 3,
+        Move(Field.DH, Field.RN): 2,
+        Move(Field.DL, Field.RN): 3,
+        Move(Field.DH, Field.RF): 3,
+        Move(Field.DL, Field.RF): 4,
+        # From D to rooms
+        Move(Field.DH, Field.AH): 8,
+        Move(Field.DL, Field.AH): 9,
+        Move(Field.DH, Field.AL): 9,
+        Move(Field.DL, Field.AL): 10,
+        Move(Field.DH, Field.BH): 6,
+        Move(Field.DL, Field.BH): 7,
+        Move(Field.DH, Field.BL): 7,
+        Move(Field.DL, Field.BL): 8,
+        Move(Field.DH, Field.CH): 4,
+        Move(Field.DL, Field.CH): 5,
+        Move(Field.DH, Field.CL): 5,
+        Move(Field.DL, Field.CL): 6,
+    }
+    extra: Dict[Move, int] = {}
+    for (from_field, to_field), cost in distances.items():
+        key = Move(to_field, from_field)
+        if key in distances:
+            assert distances[key] == cost
+        else:
+            extra[key] = cost
+
+    return {**distances, **extra}
+
+
+DISTANCES = get_distances()
 
 
 MOVE_COSTS: Dict[Amphipod, int] = {
@@ -273,6 +280,7 @@ def get_move_energy(board: Board, move: Move) -> int:
 
 def move(board: Board, move: Move) -> Board:
     amphipod = validate_move(board, move)
+    from_field, to_field = move
 
     new_board = copy(board)
     new_board[to_field] = amphipod
@@ -504,9 +512,9 @@ def blocking_moves_producer(
 @move_producer(Field.AH)
 @blocking_moves_producer
 def get_possible_ah_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
-    yield from get_moves(Field.AB)
-    yield from get_moves(Field.LN)
     yield from get_moves(Field.LF, {Field.LN})
+    yield from get_moves(Field.LN)
+    yield from get_moves(Field.AB)
     yield from get_moves(Field.BC, {Field.AB})
     yield from get_moves(Field.CD, {Field.BC, Field.AB})
     yield from get_moves(Field.RN, {Field.CD, Field.BC, Field.AB})
@@ -516,9 +524,9 @@ def get_possible_ah_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
 @move_producer(Field.AL)
 @blocking_moves_producer
 def get_possible_al_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
-    yield from get_moves(Field.AB, {Field.AH})
-    yield from get_moves(Field.LN, {Field.AH})
     yield from get_moves(Field.LF, {Field.LN, Field.AH})
+    yield from get_moves(Field.LN, {Field.AH})
+    yield from get_moves(Field.AB, {Field.AH})
     yield from get_moves(Field.BC, {Field.AB, Field.AH})
     yield from get_moves(Field.CD, {Field.BC, Field.AB, Field.AH})
     yield from get_moves(Field.RN, {Field.CD, Field.BC, Field.AB, Field.AH})
@@ -528,37 +536,73 @@ def get_possible_al_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
 @move_producer(Field.BH)
 @blocking_moves_producer
 def get_possible_bh_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
-    pass
+    yield from get_moves(Field.LF, {Field.LN, Field.AB})
+    yield from get_moves(Field.LN, {Field.AB})
+    yield from get_moves(Field.AB)
+    yield from get_moves(Field.BC)
+    yield from get_moves(Field.CD, {Field.BC})
+    yield from get_moves(Field.RN, {Field.CD, Field.BC})
+    yield from get_moves(Field.RF, {Field.RN, Field.CD, Field.BC})
 
 
 @move_producer(Field.BL)
 @blocking_moves_producer
 def get_possible_bl_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
-    pass
+    yield from get_moves(Field.LF, {Field.LN, Field.AB, Field.BH})
+    yield from get_moves(Field.LN, {Field.AB, Field.BH})
+    yield from get_moves(Field.AB, {Field.BH})
+    yield from get_moves(Field.BC, {Field.BH})
+    yield from get_moves(Field.CD, {Field.BC, Field.BH})
+    yield from get_moves(Field.RN, {Field.CD, Field.BC, Field.BH})
+    yield from get_moves(Field.RF, {Field.RN, Field.CD, Field.BC, Field.BH})
 
 
 @move_producer(Field.CH)
 @blocking_moves_producer
 def get_possible_ch_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
-    pass
+    yield from get_moves(Field.LF, {Field.LN, Field.BC, Field.AB})
+    yield from get_moves(Field.LN, {Field.BC, Field.AB})
+    yield from get_moves(Field.AB, {Field.BC})
+    yield from get_moves(Field.BC)
+    yield from get_moves(Field.CD)
+    yield from get_moves(Field.RN, {Field.CD})
+    yield from get_moves(Field.RF, {Field.RN, Field.CD})
 
 
 @move_producer(Field.CL)
 @blocking_moves_producer
 def get_possible_cl_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
-    pass
+    yield from get_moves(Field.LF, {Field.LN, Field.BC, Field.AB, Field.CH})
+    yield from get_moves(Field.LN, {Field.BC, Field.AB, Field.CH})
+    yield from get_moves(Field.AB, {Field.BC, Field.CH})
+    yield from get_moves(Field.BC, {Field.CH})
+    yield from get_moves(Field.CD, {Field.CH})
+    yield from get_moves(Field.RN, {Field.CD, Field.CH})
+    yield from get_moves(Field.RF, {Field.RN, Field.CD, Field.CH})
 
 
 @move_producer(Field.DH)
 @blocking_moves_producer
 def get_possible_dh_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
-    pass
+    yield from get_moves(Field.LF, {Field.LN, Field.CD, Field.BC, Field.AB})
+    yield from get_moves(Field.LN, {Field.CD, Field.BC, Field.AB})
+    yield from get_moves(Field.AB, {Field.CD, Field.BC})
+    yield from get_moves(Field.BC, {Field.CD})
+    yield from get_moves(Field.CD)
+    yield from get_moves(Field.RN)
+    yield from get_moves(Field.RF, {Field.RN})
 
 
 @move_producer(Field.DL)
 @blocking_moves_producer
 def get_possible_dl_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
-    pass
+    yield from get_moves(Field.LF, {Field.LN, Field.CD, Field.BC, Field.AB, Field.DH})
+    yield from get_moves(Field.LN, {Field.CD, Field.BC, Field.AB, Field.DH})
+    yield from get_moves(Field.AB, {Field.CD, Field.BC, Field.DH})
+    yield from get_moves(Field.BC, {Field.CD, Field.DH})
+    yield from get_moves(Field.CD, {Field.DH})
+    yield from get_moves(Field.RN, {Field.DH})
+    yield from get_moves(Field.RF, {Field.RN, Field.DH})
 
 
 def get_possible_moves(board: Board) -> Iterable[Move]:
@@ -636,9 +680,9 @@ def dfs(starting_board: Board) -> Tuple[List[Move], int]:
 
 def main(input: TextIO) -> str:
     starting_board = read_board(input)
-    stack, energy = dfs(starting_board)
-    for board in stack:
-        logger.info("Step\n%r\n", board)
+    moves, energy = dfs(starting_board)
+    for from_field, to_field in moves:
+        logger.info("Step: %s -> %s", from_field.value, to_field.value)
     return f"{energy}"
 
 
