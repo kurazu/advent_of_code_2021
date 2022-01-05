@@ -4,8 +4,9 @@ import functools
 import logging
 import operator
 import re
+import sys
 from copy import copy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import (Callable, DefaultDict, Dict, Iterable, List, NamedTuple,
                     Optional, Protocol, Set, TextIO, Tuple)
@@ -626,7 +627,122 @@ def get_possible_moves(board: Board) -> Iterable[Move]:
 Stack = List[Board]
 
 
+@dataclass
+class DFSSearcher:
+    best_energy: float = float("inf")
+    boards_seen: Set[str] = field(default_factory=set)
+
+    def register_state_seen(self, board: Board) -> None:
+        self.boards_seen.add(board.id())
+
+    def is_terminal(self, board: Board) -> bool:
+        return board == TARGET_BOARD
+
+    def handle_terminal_stage(
+        self, current_moves: List[Move], current_energy: int
+    ) -> Tuple[List[Move], int]:
+        if current_energy < self.best_energy:
+            logger.debug("Found best terminal state with energy %d", current_energy)
+            self.best_energy = current_energy
+        else:
+            logger.debug("Garbage terminal state %d", current_energy)
+        return current_moves, current_energy
+
+    def __call__(
+        self, current_board: Board, current_moves: List[Move], current_energy: int
+    ) -> Optional[Tuple[List[Move], int]]:
+        self.register_state_seen(current_board)
+
+        if self.is_terminal(current_board):
+            return self.handle_terminal_stage(current_moves, current_energy)
+        else:
+            return self.handle_nonterminal_stage(
+                current_board, current_moves, current_energy
+            )
+
+    def get_prioritized_possible_moves(
+        self, board: Board
+    ) -> Iterable[Tuple[Move, int]]:
+        possibilities = [
+            (possible_move, get_move_energy(board, possible_move))
+            for possible_move in get_possible_moves(board)
+        ]
+
+        # Explore the state space based on current move cost heuristic
+        possibilities.sort(key=operator.itemgetter(1))
+        return possibilities
+
+    def is_move_not_hopeless(
+        self, move_energy: Tuple[Move, int], current_energy: int
+    ) -> bool:
+        move, energy = move_energy
+        return current_energy + energy < self.best_energy
+
+    def prune_hopeless_moves(
+        self, possible_moves: Iterable[Tuple[Move, int]], current_energy: int
+    ) -> Iterable[Tuple[Move, int]]:
+        return filter(
+            partial(self.is_move_not_hopeless, current_energy=current_energy),
+            possible_moves,
+        )
+
+    def explore_moves(
+        self,
+        current_board: Board,
+        current_moves: List[Move],
+        current_energy: int,
+        possibile_moves: Iterable[Tuple[Move, int]],
+    ) -> List[Tuple[List[Move], int]]:
+        results: List[Tuple[List[Move], int]] = []
+        for possible_move, move_energy in possibile_moves:
+            possible_board = move(current_board, possible_move)
+            possible_board_id = possible_board.id()
+
+            if possible_board_id in self.boards_seen:
+                # logger.debug("Target state already visited")
+                continue  # We've seen this state
+            # State to explore
+            result = self(
+                possible_board,
+                current_moves + [possible_move],
+                current_energy + move_energy,
+            )
+            if result is None:
+                continue
+
+            results.append(result)
+
+        return results
+
+    def choose_best_result(
+        self, results: List[Tuple[List[Move], int]]
+    ) -> Optional[Tuple[List[Move], int]]:
+        if not results:
+            return None
+        else:
+            results.sort(key=operator.itemgetter(1))
+            best_result, *_ = results
+            return best_result
+
+    def handle_nonterminal_stage(
+        self, current_board: Board, current_moves: List[Move], current_energy: int
+    ) -> Optional[Tuple[List[Move], int]]:
+        possible_moves = self.get_prioritized_possible_moves(current_board)
+        moves_to_consider = self.prune_hopeless_moves(possible_moves, current_energy)
+        results = self.explore_moves(
+            current_board, current_moves, current_energy, moves_to_consider
+        )
+        return self.choose_best_result(results)
+
+
 def dfs(starting_board: Board) -> Tuple[List[Move], int]:
+    searcher = DFSSearcher()
+    result = searcher(starting_board, [], 0)
+    assert result is not None
+    return result
+
+
+def _dfs(starting_board: Board) -> Tuple[List[Move], int]:
     best_energy = float("inf")
     boards_seen: Set[str] = set()
 
@@ -649,6 +765,9 @@ def dfs(starting_board: Board) -> Tuple[List[Move], int]:
             for possible_move in get_possible_moves(current_board):
                 move_energy = get_move_energy(current_board, possible_move)
                 if stack_energy + move_energy >= best_energy:
+                    # logger.debug(
+                    #     "Unpromising move %d (+%d) pruned", move_energy, stack_energy
+                    # )
                     continue  # This state is already worse than the current best
                 possibilities.append((possible_move, move_energy))
             # Explore the state space based on current move cost heuristic
@@ -660,6 +779,7 @@ def dfs(starting_board: Board) -> Tuple[List[Move], int]:
                 possible_board_id = possible_board.id()
 
                 if possible_board_id in boards_seen:
+                    # logger.debug("Target state already visited")
                     continue  # We've seen this state
                 else:  # State to explore
                     recursive_result = recursive_search(
@@ -668,16 +788,19 @@ def dfs(starting_board: Board) -> Tuple[List[Move], int]:
                         stack_energy + move_energy,
                     )
                     if recursive_result is None:
+                        # logger.debug("Move brings no conculusions")
                         continue
                     else:
                         result_possibilities.append(recursive_result)
             if not result_possibilities:
+                # logger.debug("No result possibilities found")
                 return None  # No valid moves from here
             else:
                 result_possibilities.sort(key=operator.itemgetter(1))
                 return result_possibilities[0]
 
     best_result = recursive_search(starting_board, [], 0)
+    breakpoint()
     assert best_result is not None
     return best_result
 
@@ -699,4 +822,5 @@ def main(input: TextIO) -> str:
 
 
 if __name__ == "__main__":
+    sys.setrecursionlimit(sys.getrecursionlimit() * 10)
     run_with_file_argument(main)
