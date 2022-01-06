@@ -12,6 +12,7 @@ from typing import (Any, Callable, DefaultDict, Dict, Iterable, List,
                     NamedTuple, Optional, Protocol, Set, TextIO, Tuple)
 
 from returns.curry import partial
+from tqdm import tqdm
 
 from ..cli import run_with_file_argument
 
@@ -85,7 +86,9 @@ class Board(dict[Field, Optional[Amphipod]]):
         f = self.format_amphipod
 
         return (
-            f"{f(self[Field.LF])}{f(self[Field.LN])}{f(self[Field.AB])}{f(self[Field.BC])}{f(self[Field.CD])}{f(self[Field.RN])}{f(self[Field.RF])}"
+            f"{f(self[Field.LF])}{f(self[Field.LN])}"
+            f"{f(self[Field.AB])}{f(self[Field.BC])}{f(self[Field.CD])}"
+            f"{f(self[Field.RN])}{f(self[Field.RF])}"
             f"{f(self[Field.AH])}{f(self[Field.BH])}{f(self[Field.CH])}{f(self[Field.DH])}"
             f"{f(self[Field.AL])}{f(self[Field.BL])}{f(self[Field.CL])}{f(self[Field.DL])}"
         )
@@ -283,7 +286,8 @@ def move(board: Board, move: Move) -> Board:
     amphipod = validate_move(board, move)
     from_field, to_field = move
 
-    new_board = copy(board)
+    new_board = Board()
+    new_board.update(board)
     new_board[to_field] = amphipod
     new_board[from_field] = None
 
@@ -776,73 +780,62 @@ def dfs(starting_board: Board) -> Tuple[List[Move], int]:
 
 def _dfs(starting_board: Board) -> Tuple[List[Move], int]:
     best_energy = float("inf")
-    boards_seen: Set[str] = set()
+    # boards_seen: Set[str] = set()
 
     def recursive_search(
-        current_board: Board, moves: List[Move], stack_energy: int
+        boards_seen: Set[str],
+        current_board: Board,
+        moves: List[Move],
+        stack_energy: int,
     ) -> Optional[Tuple[List[Move], int]]:
         nonlocal best_energy
 
-        tabs = " " * len(moves)
-
-        def log(msg: str, *args: Any) -> None:
-            formatted_message = f"{tabs} {msg}"
-            logger.debug(formatted_message, *args)
-
-        boards_seen.add(current_board.id())  # might be too memory intensive
+        boards_seen = boards_seen | {
+            current_board.id()
+        }  # might be too memory intensive
         if current_board == TARGET_BOARD:
             # Terminal state
             if stack_energy < best_energy:
-                log("Found best terminal state with energy %d", stack_energy)
+                logger.debug("Found best terminal state with energy %d", stack_energy)
                 best_energy = stack_energy
-            else:
-                log("Garbage terminal state %d", stack_energy)
             return moves, stack_energy
         else:
             possibilities: List[Tuple[Move, int]] = []
             for possible_move in get_possible_moves(current_board):
                 move_energy = get_move_energy(current_board, possible_move)
                 if stack_energy + move_energy >= best_energy:
-                    log("Unpromising move %d + %d pruned", stack_energy, move_energy)
                     continue  # This state is already worse than the current best
                 possibilities.append((possible_move, move_energy))
             # Explore the state space based on current move cost heuristic
             possibilities.sort(key=operator.itemgetter(1))
-            log("Found %d possible moves", len(possibilities))
             result_possibilities: List[Tuple[List[Move], int]] = []
+            if len(moves) < 2:
+                possibilities = tqdm(possibilities, desc=f"Level {len(moves)}")
             for possible_move, move_energy in possibilities:
                 possible_board = move(current_board, possible_move)
                 possible_board_id = possible_board.id()
 
                 if possible_board_id in boards_seen:
-                    log("Target state already visited")
                     continue  # We've seen this state
                 else:  # State to explore
                     recursive_result = recursive_search(
+                        boards_seen,
                         possible_board,
                         moves + [possible_move],
                         stack_energy + move_energy,
                     )
                     if recursive_result is None:
-                        log("Move brings no conculusions")
                         continue
                     else:
                         result_possibilities.append(recursive_result)
-            log("Processed %d results", len(result_possibilities))
             if not result_possibilities:
-                log("No result possibilities found")
                 return None  # No valid moves from here
             else:
                 result_possibilities.sort(key=operator.itemgetter(1))
                 return result_possibilities[0]
 
-    best_result = recursive_search(starting_board, [], 0)
+    best_result = recursive_search({starting_board.id()}, starting_board, [], 0)
     assert best_result is not None
-    logger.debug(
-        "Found best result with energy %d after visiting %d states",
-        best_result[1],
-        len(boards_seen),
-    )
     return best_result
 
 
