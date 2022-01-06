@@ -786,8 +786,7 @@ def _dfs(starting_board: Board) -> Tuple[List[Move], int]:
     def recursive_search(
         boards_seen: Set[str],
         current_board: Board,
-        moves: List[Move],
-        stack_energy: int,
+        current_energy: int,
     ) -> Optional[Tuple[List[Move], int]]:
         nonlocal best_energy
 
@@ -796,22 +795,21 @@ def _dfs(starting_board: Board) -> Tuple[List[Move], int]:
             return cache[current_board_id]
         if current_board == TARGET_BOARD:
             # Terminal state
-            if stack_energy < best_energy:
-                logger.debug("Found best terminal state with energy %d", stack_energy)
-                best_energy = stack_energy
-            return moves, stack_energy
+            if current_energy < best_energy:
+                logger.debug("Found best terminal state with energy %d", current_energy)
+                best_energy = current_energy
+            # No more effort needed
+            return [], 0
         else:
             possibilities: List[Tuple[Move, int]] = []
             for possible_move in get_possible_moves(current_board):
                 move_energy = get_move_energy(current_board, possible_move)
-                if stack_energy + move_energy >= best_energy:
+                if current_energy + move_energy >= best_energy:
                     continue  # This state is already worse than the current best
                 possibilities.append((possible_move, move_energy))
             # Explore the state space based on current move cost heuristic
             possibilities.sort(key=operator.itemgetter(1))
             result_possibilities: List[Tuple[List[Move], int]] = []
-            if len(moves) < 2:
-                possibilities = tqdm(possibilities, desc=f"Level {len(moves)}")
             for possible_move, move_energy in possibilities:
                 possible_board = move(current_board, possible_move)
                 possible_board_id = possible_board.id()
@@ -822,13 +820,18 @@ def _dfs(starting_board: Board) -> Tuple[List[Move], int]:
                     recursive_result = recursive_search(
                         boards_seen | {current_board_id},
                         possible_board,
-                        moves + [possible_move],
-                        stack_energy + move_energy,
+                        current_energy + move_energy,
                     )
                     if recursive_result is None:
                         continue
                     else:
-                        result_possibilities.append(recursive_result)
+                        recursive_moves, recursive_energy = recursive_result
+                        result_possibilities.append(
+                            (
+                                [possible_move] + recursive_moves,
+                                move_energy + recursive_energy,
+                            )
+                        )
             if not result_possibilities:
                 cache[current_board_id] = None
                 return None  # No valid moves from here
@@ -836,10 +839,10 @@ def _dfs(starting_board: Board) -> Tuple[List[Move], int]:
                 result_possibilities.sort(key=operator.itemgetter(1))
                 best_possibility, *_ = result_possibilities
                 best_moves, best_energy = best_possibility
-                cache[current_board_id] = best_possibility[0], best_possibility
-                return best_possibility
+                cache[current_board_id] = best_possibility
+                return best_moves, best_energy
 
-    best_result = recursive_search({starting_board.id()}, starting_board, [], 0)
+    best_result = recursive_search({starting_board.id()}, starting_board, 0)
     assert best_result is not None
     return best_result
 
