@@ -8,8 +8,8 @@ import sys
 from copy import copy
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import (Callable, DefaultDict, Dict, Iterable, List, NamedTuple,
-                    Optional, Protocol, Set, TextIO, Tuple)
+from typing import (Any, Callable, DefaultDict, Dict, Iterable, List,
+                    NamedTuple, Optional, Protocol, Set, TextIO, Tuple)
 
 from returns.curry import partial
 
@@ -493,14 +493,14 @@ class GetMovesCallback(Protocol):
 
 
 def blocking_moves_producer(
-    callback: Callable[[GetMovesCallback], Iterable[Move]],
+    callback: Callable[[Board, Field, Amphipod, GetMovesCallback], Iterable[Move]],
 ) -> Callable[[Board, Field, Amphipod], Iterable[Move]]:
     @functools.wraps(callback)
     def blocking_moves_producer_wrapper(
         board: Board, source_field: Field, amphipod: Amphipod
     ) -> Iterable[Move]:
         get_moves = partial(get_possible_blocking_moves, board, source_field)
-        yield from callback(get_moves)
+        yield from callback(board, source_field, amphipod, get_moves)
 
     return blocking_moves_producer_wrapper
 
@@ -512,7 +512,11 @@ def blocking_moves_producer(
 
 @move_producer(Field.AH)
 @blocking_moves_producer
-def get_possible_ah_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
+def get_possible_ah_moves(
+    board: Board, source_field: Field, amphipod: Amphipod, get_moves: GetMovesCallback
+) -> Iterable[Move]:
+    if amphipod == Amphipod.AMBER and board[Field.AL] == Amphipod.AMBER:
+        return  # already where we are supposed to be
     yield from get_moves(Field.LF, {Field.LN})
     yield from get_moves(Field.LN)
     yield from get_moves(Field.AB)
@@ -524,7 +528,11 @@ def get_possible_ah_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
 
 @move_producer(Field.AL)
 @blocking_moves_producer
-def get_possible_al_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
+def get_possible_al_moves(
+    board: Board, source_field: Field, amphipod: Amphipod, get_moves: GetMovesCallback
+) -> Iterable[Move]:
+    if amphipod == Amphipod.AMBER:
+        return  # we are already where we are supposed to be
     yield from get_moves(Field.LF, {Field.LN, Field.AH})
     yield from get_moves(Field.LN, {Field.AH})
     yield from get_moves(Field.AB, {Field.AH})
@@ -536,7 +544,11 @@ def get_possible_al_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
 
 @move_producer(Field.BH)
 @blocking_moves_producer
-def get_possible_bh_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
+def get_possible_bh_moves(
+    board: Board, source_field: Field, amphipod: Amphipod, get_moves: GetMovesCallback
+) -> Iterable[Move]:
+    if amphipod == Amphipod.BRONZE and board[Field.BL] == Amphipod.BRONZE:
+        return  # already where we are supposed to be
     yield from get_moves(Field.LF, {Field.LN, Field.AB})
     yield from get_moves(Field.LN, {Field.AB})
     yield from get_moves(Field.AB)
@@ -548,7 +560,11 @@ def get_possible_bh_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
 
 @move_producer(Field.BL)
 @blocking_moves_producer
-def get_possible_bl_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
+def get_possible_bl_moves(
+    board: Board, source_field: Field, amphipod: Amphipod, get_moves: GetMovesCallback
+) -> Iterable[Move]:
+    if amphipod == Amphipod.BRONZE:
+        return  # we are already where we are supposed to be
     yield from get_moves(Field.LF, {Field.LN, Field.AB, Field.BH})
     yield from get_moves(Field.LN, {Field.AB, Field.BH})
     yield from get_moves(Field.AB, {Field.BH})
@@ -560,7 +576,11 @@ def get_possible_bl_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
 
 @move_producer(Field.CH)
 @blocking_moves_producer
-def get_possible_ch_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
+def get_possible_ch_moves(
+    board: Board, source_field: Field, amphipod: Amphipod, get_moves: GetMovesCallback
+) -> Iterable[Move]:
+    if amphipod == Amphipod.COPPER and board[Field.CL] == Amphipod.COPPER:
+        return  # already where we are supposed to be
     yield from get_moves(Field.LF, {Field.LN, Field.BC, Field.AB})
     yield from get_moves(Field.LN, {Field.BC, Field.AB})
     yield from get_moves(Field.AB, {Field.BC})
@@ -572,7 +592,11 @@ def get_possible_ch_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
 
 @move_producer(Field.CL)
 @blocking_moves_producer
-def get_possible_cl_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
+def get_possible_cl_moves(
+    board: Board, source_field: Field, amphipod: Amphipod, get_moves: GetMovesCallback
+) -> Iterable[Move]:
+    if amphipod == Amphipod.COPPER:
+        return  # we are already where we are supposed to be
     yield from get_moves(Field.LF, {Field.LN, Field.BC, Field.AB, Field.CH})
     yield from get_moves(Field.LN, {Field.BC, Field.AB, Field.CH})
     yield from get_moves(Field.AB, {Field.BC, Field.CH})
@@ -584,7 +608,11 @@ def get_possible_cl_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
 
 @move_producer(Field.DH)
 @blocking_moves_producer
-def get_possible_dh_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
+def get_possible_dh_moves(
+    board: Board, source_field: Field, amphipod: Amphipod, get_moves: GetMovesCallback
+) -> Iterable[Move]:
+    if amphipod == Amphipod.DESERT and board[Field.DL] == Amphipod.DESERT:
+        return  # already where we are supposed to be
     yield from get_moves(Field.LF, {Field.LN, Field.CD, Field.BC, Field.AB})
     yield from get_moves(Field.LN, {Field.CD, Field.BC, Field.AB})
     yield from get_moves(Field.AB, {Field.CD, Field.BC})
@@ -596,7 +624,11 @@ def get_possible_dh_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
 
 @move_producer(Field.DL)
 @blocking_moves_producer
-def get_possible_dl_moves(get_moves: GetMovesCallback) -> Iterable[Move]:
+def get_possible_dl_moves(
+    board: Board, source_field: Field, amphipod: Amphipod, get_moves: GetMovesCallback
+) -> Iterable[Move]:
+    if amphipod == Amphipod.DESERT:
+        return  # we are already where we are supposed to be
     yield from get_moves(Field.LF, {Field.LN, Field.CD, Field.BC, Field.AB, Field.DH})
     yield from get_moves(Field.LN, {Field.CD, Field.BC, Field.AB, Field.DH})
     yield from get_moves(Field.AB, {Field.CD, Field.BC, Field.DH})
@@ -751,35 +783,39 @@ def _dfs(starting_board: Board) -> Tuple[List[Move], int]:
     ) -> Optional[Tuple[List[Move], int]]:
         nonlocal best_energy
 
+        tabs = " " * len(moves)
+
+        def log(msg: str, *args: Any) -> None:
+            formatted_message = f"{tabs} {msg}"
+            logger.debug(formatted_message, *args)
+
         boards_seen.add(current_board.id())  # might be too memory intensive
         if current_board == TARGET_BOARD:
             # Terminal state
             if stack_energy < best_energy:
-                logger.debug("Found best terminal state with energy %d", stack_energy)
+                log("Found best terminal state with energy %d", stack_energy)
                 best_energy = stack_energy
             else:
-                logger.debug("Garbage terminal state %d", stack_energy)
+                log("Garbage terminal state %d", stack_energy)
             return moves, stack_energy
         else:
             possibilities: List[Tuple[Move, int]] = []
             for possible_move in get_possible_moves(current_board):
                 move_energy = get_move_energy(current_board, possible_move)
                 if stack_energy + move_energy >= best_energy:
-                    # logger.debug(
-                    #     "Unpromising move %d (+%d) pruned", move_energy, stack_energy
-                    # )
+                    log("Unpromising move %d + %d pruned", stack_energy, move_energy)
                     continue  # This state is already worse than the current best
                 possibilities.append((possible_move, move_energy))
             # Explore the state space based on current move cost heuristic
             possibilities.sort(key=operator.itemgetter(1))
-
+            log("Found %d possible moves", len(possibilities))
             result_possibilities: List[Tuple[List[Move], int]] = []
             for possible_move, move_energy in possibilities:
                 possible_board = move(current_board, possible_move)
                 possible_board_id = possible_board.id()
 
                 if possible_board_id in boards_seen:
-                    # logger.debug("Target state already visited")
+                    log("Target state already visited")
                     continue  # We've seen this state
                 else:  # State to explore
                     recursive_result = recursive_search(
@@ -788,26 +824,31 @@ def _dfs(starting_board: Board) -> Tuple[List[Move], int]:
                         stack_energy + move_energy,
                     )
                     if recursive_result is None:
-                        # logger.debug("Move brings no conculusions")
+                        log("Move brings no conculusions")
                         continue
                     else:
                         result_possibilities.append(recursive_result)
+            log("Processed %d results", len(result_possibilities))
             if not result_possibilities:
-                # logger.debug("No result possibilities found")
+                log("No result possibilities found")
                 return None  # No valid moves from here
             else:
                 result_possibilities.sort(key=operator.itemgetter(1))
                 return result_possibilities[0]
 
     best_result = recursive_search(starting_board, [], 0)
-    breakpoint()
     assert best_result is not None
+    logger.debug(
+        "Found best result with energy %d after visiting %d states",
+        best_result[1],
+        len(boards_seen),
+    )
     return best_result
 
 
 def main(input: TextIO) -> str:
     starting_board = read_board(input)
-    moves, energy = dfs(starting_board)
+    moves, energy = _dfs(starting_board)
     logger.info("Best solution with %d moves and energy %d", len(moves), energy)
     board = starting_board
     for best_move in moves:
@@ -818,6 +859,7 @@ def main(input: TextIO) -> str:
             "Step: %s %s -> %s", amphipod.name, from_field.value, to_field.value
         )
         board = move(board, best_move)
+        logger.info("\n%r", board)
     return f"{energy}"
 
 
