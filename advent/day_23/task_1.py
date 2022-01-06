@@ -781,6 +781,7 @@ def dfs(starting_board: Board) -> Tuple[List[Move], int]:
 def _dfs(starting_board: Board) -> Tuple[List[Move], int]:
     best_energy = float("inf")
     # boards_seen: Set[str] = set()
+    cache: Dict[str, Optional[Tuple[List[Move], int]]] = {}
 
     def recursive_search(
         boards_seen: Set[str],
@@ -790,9 +791,9 @@ def _dfs(starting_board: Board) -> Tuple[List[Move], int]:
     ) -> Optional[Tuple[List[Move], int]]:
         nonlocal best_energy
 
-        boards_seen = boards_seen | {
-            current_board.id()
-        }  # might be too memory intensive
+        current_board_id = current_board.id()
+        if current_board_id in cache:
+            return cache[current_board_id]
         if current_board == TARGET_BOARD:
             # Terminal state
             if stack_energy < best_energy:
@@ -819,7 +820,7 @@ def _dfs(starting_board: Board) -> Tuple[List[Move], int]:
                     continue  # We've seen this state
                 else:  # State to explore
                     recursive_result = recursive_search(
-                        boards_seen,
+                        boards_seen | {current_board_id},
                         possible_board,
                         moves + [possible_move],
                         stack_energy + move_energy,
@@ -829,10 +830,14 @@ def _dfs(starting_board: Board) -> Tuple[List[Move], int]:
                     else:
                         result_possibilities.append(recursive_result)
             if not result_possibilities:
+                cache[current_board_id] = None
                 return None  # No valid moves from here
             else:
                 result_possibilities.sort(key=operator.itemgetter(1))
-                return result_possibilities[0]
+                best_possibility, *_ = result_possibilities
+                best_moves, best_energy = best_possibility
+                cache[current_board_id] = best_possibility[0], best_possibility
+                return best_possibility
 
     best_result = recursive_search({starting_board.id()}, starting_board, [], 0)
     assert best_result is not None
