@@ -173,8 +173,13 @@ def dfs(
                 (allowed_move, get_move_energy(current_board, allowed_move))
                 for allowed_move in allowed_moves
             )
+            promising_moves = (
+                (possible_move, move_energy)
+                for possible_move, move_energy in moves_with_energy
+                if current_energy + move_energy < best_energy
+            )
             # Explore the state space based on current move cost heuristic
-            possibilities = sorted(moves_with_energy, key=operator.itemgetter(1))
+            possibilities = sorted(promising_moves, key=operator.itemgetter(1))
 
             result_possibilities: List[Tuple[List[PossibleMove[FieldType]], int]] = []
             for possible_move, move_energy in possibilities:
@@ -182,7 +187,7 @@ def dfs(
                 possible_board_id = get_board_id(nodes, possible_board)
 
                 if possible_board_id in boards_seen:
-                    continue  # We've seen this state
+                    continue  # We've been to this state
                 else:  # State to explore
                     recursive_result = recursive_search(
                         boards_seen | {current_board_id},
@@ -205,9 +210,8 @@ def dfs(
             else:
                 result_possibilities.sort(key=operator.itemgetter(1))
                 best_possibility, *_ = result_possibilities
-                best_moves, best_energy = best_possibility
                 cache[current_board_id] = best_possibility
-                return best_moves, best_energy
+                return best_possibility
 
     best_result = recursive_search(
         {get_board_id(nodes, starting_board)}, starting_board, 0
