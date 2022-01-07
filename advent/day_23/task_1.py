@@ -226,6 +226,16 @@ def get_target_board(
     return {field: amphipod for amphipod, room in rooms.items() for field in room}
 
 
+def format_board(board: Dict[Field, Optional[Amphipod]]) -> str:
+    f = format_amphipod
+
+    return f"""#############
+#{f(board[Field.LF])}{f(board[Field.LN])} {f(board[Field.AB])} {f(board[Field.BC])} {f(board[Field.CD])} {f(board[Field.RN])}{f(board[Field.RF])}#
+###{f(board[Field.AH])}#{f(board[Field.BH])}#{f(board[Field.CH])}#{f(board[Field.DH])}###
+  #{f(board[Field.AL])}#{f(board[Field.BL])}#{f(board[Field.CL])}#{f(board[Field.DL])}#
+  #########"""
+
+
 def main(input: TextIO) -> str:
     blank_board = get_blank_board(Field)
 
@@ -275,6 +285,7 @@ def main(input: TextIO) -> str:
     )
     logger.info("Best solution with %d moves and energy %d", len(moves), energy)
     board = starting_board
+    logger.info("Starting board\n%s", format_board(board))
     for best_move in moves:
         amphipod = board[best_move.from_field]
         assert amphipod is not None
@@ -285,6 +296,7 @@ def main(input: TextIO) -> str:
             best_move.to_field.value,
         )
         board = move(board, best_move)
+        logger.info("Board\n%s", format_board(board))
     return f"{energy}"
 
 
