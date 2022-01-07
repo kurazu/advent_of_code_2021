@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import operator
+import random
 import re
 import sys
 from enum import Enum
@@ -134,9 +135,12 @@ def get_allowed_moves(
     return filter(partial(is_allowed_move, board), possible_moves)
 
 
+IDType = str
+
+
 def get_board_id(
     nodes: Iterable[FieldType], board: Dict[FieldType, Optional[Amphipod]]
-) -> str:
+) -> IDType:
     return "".join(format_amphipod(board[node]) for node in nodes)
 
 
@@ -281,13 +285,19 @@ def main(input: TextIO) -> str:
         hallway={Field.LF, Field.LN, Field.AB, Field.BC, Field.CD, Field.RN, Field.RF},
     )
     logger.info("Found %d possible moves", len(possible_moves))
-    moves, energy = dfs(
-        nodes=Field,
-        starting_board=starting_board,
-        target_board=target_board,
-        possible_moves=possible_moves,
-    )
-    logger.info("Best solution with %d moves and energy %d", len(moves), energy)
+    prev_energy: Optional[int] = None
+    for _ in range(5):
+        moves, energy = dfs(
+            nodes=Field,
+            starting_board=starting_board,
+            target_board=target_board,
+            possible_moves=possible_moves,
+        )
+        logger.info("Best solution with %d moves and energy %d", len(moves), energy)
+        if prev_energy is not None:
+            assert energy == prev_energy, f"{energy} != {prev_energy}"
+        prev_energy = energy
+        random.shuffle(possible_moves)
     board = starting_board
     logger.info("Starting board\n%s", format_board(board))
     for best_move in moves:
