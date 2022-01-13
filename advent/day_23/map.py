@@ -11,21 +11,35 @@ from .enums import Amphipod
 FieldType = TypeVar("FieldType", bound=Enum)
 
 
-class RequirementType(Enum):
-    POSITIVE = "+"
-    NEGATIVE = "-"
+class MoveType(Enum):
+    ENTER_ROOM = "enter"
+    LEAVE_ROOM = "leave"
 
 
 class PossibleMove(GenericModel, Generic[FieldType]):
     from_field: FieldType
+    """Source field of the move."""
+
     to_field: FieldType
+    """Destination field of the move."""
+
     through_fields: Set[FieldType]
-    requirement_type: RequirementType
-    required_amphipod: Amphipod
-    required_same_type_neighbours: Set[FieldType]
+    """
+    Fields that the amphipod needs to traverse on the way from source to destination.
+    """
+
+    move_type: MoveType
+    """Type of move."""
+
+    room_owner: Amphipod
+    """The type of amphipods that are supposed to leave in the room."""
+
+    room_neighbours: Set[FieldType]
+    """Other fields in the room that are not in the way."""
 
     @property
     def distance(self) -> int:
+        """The distance an amphipod needs to travel between source and destination."""
         return len(self.through_fields) + 1
 
 
@@ -64,9 +78,9 @@ def get_possible_moves(
                         through_fields=through_fields,
                         # The requirement describes the requirement that needs
                         # to be False for move to be available
-                        requirement_type=RequirementType.NEGATIVE,
-                        required_amphipod=amphipod,
-                        required_same_type_neighbours=required_same_type_neighbours,
+                        move_type=MoveType.LEAVE_ROOM,
+                        room_owner=amphipod,
+                        room_neighbours=required_same_type_neighbours,
                     )
                 )
 
@@ -85,9 +99,9 @@ def get_possible_moves(
                         through_fields=through_fields,
                         # The requirement describes the requirement that needs
                         # to be True for move to be available
-                        requirement_type=RequirementType.POSITIVE,
-                        required_amphipod=amphipod,
-                        required_same_type_neighbours=required_same_type_neighbours,
+                        move_type=MoveType.ENTER_ROOM,
+                        room_owner=amphipod,
+                        room_neighbours=required_same_type_neighbours,
                     )
                 )
 
@@ -100,17 +114,17 @@ def move(
     return {**board, move.to_field: board[move.from_field], move.from_field: None}
 
 
-def is_allowed_positive_move(
+def is_allowed_enter_room_move(
     board: Dict[FieldType, Optional[Amphipod]],
     possible_move: PossibleMove[FieldType],
     amphipod: Amphipod,
 ) -> bool:
-    if amphipod != possible_move.required_amphipod:
+    if amphipod != possible_move.room_owner:
         # wrong type of amphipod cannot make the move
         return False
     if any(
-        board[neighbour_field] != possible_move.required_amphipod
-        for neighbour_field in possible_move.required_same_type_neighbours
+        board[neighbour_field] != possible_move.room_owner
+        for neighbour_field in possible_move.room_neighbours
     ):
         # move cannot be made because neighbours are not present yet
         return False
@@ -118,22 +132,29 @@ def is_allowed_positive_move(
     return True
 
 
-def is_allowed_negative_move(
+def is_allowed_leave_room_move(
     board: Dict[FieldType, Optional[Amphipod]],
     possible_move: PossibleMove[FieldType],
     amphipod: Amphipod,
 ) -> bool:
-    if amphipod != possible_move.required_amphipod:
+    if amphipod != possible_move.room_owner:
         # this room is for a different type of amphipods, so this one can leave
         return True
-    if any(
-        board[neighbour_field] != possible_move.required_amphipod
-        for neighbour_field in possible_move.required_same_type_neighbours
+    if not possible_move.room_neighbours:
+        # The correct amphipod is on the right place already
+        # and does not depend on neighbours
+        return False
+    # now we know that the required type of amphipod wants to move into the room.
+    # we need to check though if all neighbours are already also of the same type.
+    # if at least one is not, the move cannot complete (need to wait for neighbours).
+    if all(
+        board[neighbour_field] == possible_move.room_owner
+        for neighbour_field in possible_move.room_neighbours
     ):
-        # the neighbours are not present yet
-        return True
+        # the neighbours are present already, we cannot leave
+        return False
 
-    # we are where we are supposed to be, so we need to stay
+    # Neighbours are not present yet
     return True
 
 
@@ -154,10 +175,11 @@ def is_allowed_move(
         # move cannot be made because there is a creature blocking the way
         return False
 
-    if possible_move.requirement_type == RequirementType.POSITIVE:
-        return is_allowed_positive_move(board, possible_move, amphipod)
+    if possible_move.move_type == MoveType.ENTER_ROOM:
+        return is_allowed_enter_room_move(board, possible_move, amphipod)
     else:
-        return is_allowed_negative_move(board, possible_move, amphipod)
+        assert possible_move.move_type == MoveType.LEAVE_ROOM
+        return is_allowed_leave_room_move(board, possible_move, amphipod)
 
 
 def get_allowed_moves(

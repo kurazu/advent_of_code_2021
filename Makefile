@@ -343,6 +343,9 @@ day_22_task_2_test:
 day_23_task_1_sample:
 	poetry run python -m advent.day_23.task_1 data/day_23/sample.txt
 
+day_23_test:
+	poetry run pytest -s -vv advent/day_23/test_*.py
+
 day_23_task_1_input:
 	poetry run python -m advent.day_23.task_1 data/day_23/input.txt
 
