@@ -26,6 +26,8 @@ def dfs(
 
     score_sort_key = operator.itemgetter(1)
 
+    cache: Dict[IDType, Tuple[List[PossibleMove[FieldType]], int]] = {}
+
     def get_moves(
         current_board: Dict[FieldType, Optional[Amphipod]], current_energy: int
     ) -> Iterable[Tuple[PossibleMove[FieldType], int]]:
@@ -48,14 +50,16 @@ def dfs(
         moves_so_far: List[PossibleMove[FieldType]],
     ) -> Tuple[List[PossibleMove[FieldType]], int]:
         """Returns a tuple: (moves to terminal stage, energy to terminal stage)."""
-        if len(moves_so_far) == 50:
-            breakpoint()
         nonlocal best_energy
         if current_board == target_board:
             if current_energy < best_energy:
                 logger.debug("Found best terminal state %d", current_energy)
                 best_energy = current_energy
             return [], 0
+
+        current_board_id = board_hasher(current_board)
+        if current_board_id in cache:
+            return cache[current_board_id]
 
         results: List[Tuple[List[PossibleMove[FieldType]], int]] = []
         for possible_move, move_energy in get_moves(current_board, current_energy):
@@ -65,17 +69,22 @@ def dfs(
                 current_energy + move_energy,
                 moves_so_far + [possible_move],
             )
-            results.append((result_moves, result_energy + move_energy))
+            results.append(
+                ([possible_move] + result_moves, result_energy + move_energy)
+            )
         if not results:
             # blind alley
-            return [], ALMOST_INFINITY
+            cache[current_board_id] = moves_so_far, ALMOST_INFINITY
+            return moves_so_far, ALMOST_INFINITY
         results.sort(key=score_sort_key)
 
-        best_possibility, *other_possibilities = results
-        best_possibility_moves, best_possibility_score = best_possibility
+        (best_possibility_moves, best_possibility_score), *other_possibilities = results
         if current_energy + best_possibility_score < best_energy:
             logger.debug("Found best state %d", current_energy + best_possibility_score)
             best_energy = current_energy + best_possibility_score
-        return best_possibility_moves, current_energy + best_possibility_score
+
+        solution = (best_possibility_moves, best_possibility_score)
+        cache[current_board_id] = solution
+        return solution
 
     return recursive_search(starting_board, 0, [])
