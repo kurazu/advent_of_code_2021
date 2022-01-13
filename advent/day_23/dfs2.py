@@ -23,6 +23,7 @@ def dfs(
 ) -> Tuple[List[PossibleMove[FieldType]], int]:
     ALMOST_INFINITY = 2 ** 31
     best_energy = ALMOST_INFINITY
+    no_moves: List[PossibleMove[FieldType]] = []
 
     score_sort_key = operator.itemgetter(1)
 
@@ -47,7 +48,7 @@ def dfs(
     def recursive_search(
         current_board: Dict[FieldType, Optional[Amphipod]],
         current_energy: int,
-        moves_so_far: List[PossibleMove[FieldType]],
+        # moves_so_far: List[PossibleMove[FieldType]],
     ) -> Tuple[List[PossibleMove[FieldType]], int]:
         """Returns a tuple: (moves to terminal stage, energy to terminal stage)."""
         nonlocal best_energy
@@ -55,7 +56,7 @@ def dfs(
             if current_energy < best_energy:
                 logger.debug("Found best terminal state %d", current_energy)
                 best_energy = current_energy
-            return [], 0
+            return no_moves, 0
 
         current_board_id = board_hasher(current_board)
         if current_board_id in cache:
@@ -67,15 +68,16 @@ def dfs(
             result_moves, result_energy = recursive_search(
                 possible_board,
                 current_energy + move_energy,
-                moves_so_far + [possible_move],
+                # moves_so_far + [possible_move],
             )
             results.append(
                 ([possible_move] + result_moves, result_energy + move_energy)
             )
         if not results:
             # blind alley
-            cache[current_board_id] = moves_so_far, ALMOST_INFINITY
-            return moves_so_far, ALMOST_INFINITY
+            solution = no_moves, ALMOST_INFINITY
+            cache[current_board_id] = solution
+            return solution
         results.sort(key=score_sort_key)
 
         (best_possibility_moves, best_possibility_score), *other_possibilities = results
@@ -87,4 +89,4 @@ def dfs(
         cache[current_board_id] = solution
         return solution
 
-    return recursive_search(starting_board, 0, [])
+    return recursive_search(starting_board, 0)
