@@ -11,10 +11,12 @@ from returns.curry import partial
 
 from ..cli import run_with_file_argument
 from .dfs import dfs
+from .dfs2 import dfs as dfs2
 from .enums import Amphipod
 from .input_parsing import read_board
-from .map import (FieldType, PossibleMove, format_amphipod, get_blank_board,
-                  get_possible_moves, get_target_board, move)
+from .map import (FieldType, MoveType, PossibleMove, format_amphipod,
+                  get_blank_board, get_possible_moves, get_target_board,
+                  is_allowed_move, move)
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +82,7 @@ def run_dfs(
     _: Any,
 ) -> Tuple[List[PossibleMove[FieldType]], int]:
     random.shuffle(possible_moves)
-    return dfs(
+    return dfs2(
         starting_board=starting_board,
         target_board=target_board,
         possible_moves=possible_moves,
@@ -131,34 +133,40 @@ def main(input: TextIO) -> str:
     board_hasher = partial(get_board_id, Field)
     logger.info("Found %d possible moves", len(possible_moves))
 
-    tries = 5
-    with multiprocessing.Pool() as pool:
-        results = pool.map(
-            partial(
-                run_dfs,
-                starting_board,
-                target_board,
-                possible_moves,
-                board_hasher,
-            ),
-            range(tries),
-        )
+    moves, energy = dfs2(
+        starting_board=starting_board,
+        target_board=target_board,
+        possible_moves=possible_moves,
+        board_hasher=board_hasher,
+    )
+    # tries = 5
+    # with multiprocessing.Pool() as pool:
+    #     results = pool.map(
+    #         partial(
+    #             run_dfs,
+    #             starting_board,
+    #             target_board,
+    #             possible_moves,
+    #             board_hasher,
+    #         ),
+    #         range(tries),
+    #     )
 
-    for moves, energy in results:
-        logger.info("Best solution with %d moves and energy %d", len(moves), energy)
-        board = starting_board
-        # logger.info("Starting board\n%s", format_board(board))
-        for best_move in moves:
-            amphipod = board[best_move.from_field]
-            assert amphipod is not None
-            logger.info(
-                "Step: %s %s -> %s",
-                amphipod.name,
-                best_move.from_field.value,
-                best_move.to_field.value,
-            )
-            board = move(board, best_move)
-            # logger.info("Board\n%s", format_board(board))
+    # for moves, energy in results:
+    logger.info("Best solution with %d moves and energy %d", len(moves), energy)
+    board = starting_board
+    # logger.info("Starting board\n%s", format_board(board))
+    for best_move in moves:
+        amphipod = board[best_move.from_field]
+        assert amphipod is not None
+        logger.info(
+            "Step: %s %s -> %s",
+            amphipod.name,
+            best_move.from_field.value,
+            best_move.to_field.value,
+        )
+        board = move(board, best_move)
+        # logger.info("Board\n%s", format_board(board))
     return f"{energy}"
 
 
