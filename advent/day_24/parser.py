@@ -1,5 +1,6 @@
 import logging
 import re
+import sys
 from io import StringIO
 from types import ModuleType
 from typing import Callable, List, TextIO, Tuple
@@ -49,11 +50,13 @@ def convert_to_python(input: TextIO) -> str:
 
 
 def compile_program(input: TextIO) -> Callable[[List[int]], Tuple[int, int, int, int]]:
+    module_name = "fake"
     python_text = convert_to_python(input)
     logger.debug("Python code:\n%s", python_text)
     code = compile(python_text, "<string>", "exec")
-    module = ModuleType("fake")
+    module = ModuleType(module_name)
     exec(code, module.__dict__)
+    sys.modules[module_name] = module
     program: Callable[[List[int]], Tuple[int, int, int, int]] = getattr(
         module, "program"
     )
